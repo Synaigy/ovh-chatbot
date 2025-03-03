@@ -108,7 +108,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isLast = false }) =>
           'flex flex-col',
           'glass-morphism rounded-2xl p-4',
           isUser ? 'rounded-tr-sm' : 'rounded-tl-sm',
-          isUser ? 'bg-highlight/10' : 'bg-white/5',
+          isUser ? 'bg-highlight/10' : isLoading ? 'bg-white/5' : 'bg-[#FF3366]/10',
           isLast && isUser ? 'highlight-glow' : '',
           isLoading ? 'animate-pulse' : ''
         )}>
