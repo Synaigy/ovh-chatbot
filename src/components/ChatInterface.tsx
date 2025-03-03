@@ -180,7 +180,7 @@ const ChatInterface: React.FC = () => {
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-6 animate-fade-in">
               <h3 className="text-xl font-semibold mb-4 highlight-text animate-pulse-subtle">
-                Willkommen beim DeepSeek AI Chatbot
+                Willkommen beim OVHcloud Chatbot mit DeepSeek-R1
               </h3>
               <p className="text-white/70 max-w-lg mb-6">
                 Stellen Sie Ihre Fragen an DeepSeek R1, ein fortschrittliches Reasoning-LLM für logisches Denken, Problemlösung und präzise Antworten.
