@@ -33,7 +33,7 @@ const Index = () => {
 
         <section className="mb-16 max-w-4xl mx-auto text-center animate-fade-up" style={{ animationDelay: "0.2s" }}>
           <h2 className="text-2xl md:text-3xl font-semibold mb-4">
-            Teste Deepseek jetzt selbst!
+            Teste Deepseek-R1 jetzt selbst!
           </h2>
           <p className="text-white/80 mb-8">
             Anstatt nur darüber zu lesen, kannst du dir selbst ein Bild machen!
