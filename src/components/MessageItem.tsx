@@ -108,15 +108,15 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isLast = false }) =>
           'flex flex-col',
           'glass-morphism rounded-2xl p-4',
           isUser ? 'rounded-tr-sm' : 'rounded-tl-sm',
-          isUser ? 'bg-highlight/10' : isLoading ? 'bg-white/5' : 'bg-[#FF3366]/10',
+          isUser ? 'bg-highlight/10' : isLoading ? 'bg-[#FFDEE2]/30' : 'bg-[#FF3366]/20',
           isLast && isUser ? 'highlight-glow' : '',
           isLoading ? 'animate-pulse' : ''
         )}>
           {isLoading ? (
             <div className="flex items-center space-x-1">
-              <span className="inline-block w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-              <span className="inline-block w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-              <span className="inline-block w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+              <span className="inline-block w-2 h-2 bg-[#FF3366] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+              <span className="inline-block w-2 h-2 bg-[#FF3366] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+              <span className="inline-block w-2 h-2 bg-[#FF3366] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
             </div>
           ) : (
             contentParts.map((part, index) => (
