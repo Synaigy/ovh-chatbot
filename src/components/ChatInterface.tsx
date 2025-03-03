@@ -1,28 +1,40 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { Send } from 'lucide-react';
+import { Send, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import MessageItem from './MessageItem';
 import { sendMessage } from '@/services/aiService';
 import { useToast } from '@/components/ui/use-toast';
+import { Progress } from '@/components/ui/progress';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
 
+const QUESTIONS_LIMIT = 50;
+
 const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentAssistantMessage, setCurrentAssistantMessage] = useState('');
+  const [questionCount, setQuestionCount] = useState<number>(() => {
+    const savedCount = sessionStorage.getItem('questionCount');
+    return savedCount ? parseInt(savedCount, 10) : 0;
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('questionCount', questionCount.toString());
+  }, [questionCount]);
   
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -33,11 +45,24 @@ const ChatInterface: React.FC = () => {
     
     if (!input.trim()) return;
     
+    // Check if question limit reached
+    if (questionCount >= QUESTIONS_LIMIT) {
+      toast({
+        title: "Limit erreicht",
+        description: "Sie haben das Limit von 50 Fragen pro Browsersitzung erreicht.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const userMessage = { role: 'user' as const, content: input };
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
     setCurrentAssistantMessage('');
+    
+    // Increment question counter
+    setQuestionCount(prev => prev + 1);
     
     try {
       const allMessages = [...messages, userMessage];
@@ -117,9 +142,32 @@ const ChatInterface: React.FC = () => {
     }
   };
 
+  const questionsRemaining = QUESTIONS_LIMIT - questionCount;
+  const progressPercentage = (questionCount / QUESTIONS_LIMIT) * 100;
+
   return (
     <div className="w-full max-w-4xl mx-auto relative">
       <div className="flex flex-col h-full">
+        {/* Question Counter */}
+        <div className="mb-2 glass-morphism p-3 rounded-lg">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-sm text-white/70">Verbleibende Fragen:</span>
+            <span className={cn(
+              "font-medium",
+              questionsRemaining <= 10 ? "text-red-400" : "text-white"
+            )}>
+              {questionsRemaining} / {QUESTIONS_LIMIT}
+            </span>
+          </div>
+          <Progress value={progressPercentage} className="h-2" 
+            indicatorClassName={cn(
+              progressPercentage > 80 ? "bg-red-500" :
+              progressPercentage > 60 ? "bg-orange-500" :
+              "bg-green-500"
+            )}
+          />
+        </div>
+        
         <div className="chat-window-height overflow-y-auto p-4 glass-morphism rounded-t-xl scrollbar-thin">
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-6 animate-fade-in">
@@ -166,23 +214,33 @@ const ChatInterface: React.FC = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeySubmit}
-            placeholder="Ihre Nachricht hier eingeben..."
+            placeholder={questionCount >= QUESTIONS_LIMIT 
+              ? "Sie haben das Limit von 50 Fragen erreicht" 
+              : "Ihre Nachricht hier eingeben..."}
             className="flex-1 min-h-[60px] max-h-[200px] resize-none overflow-y-auto glass-morphism"
-            disabled={isLoading}
+            disabled={isLoading || questionCount >= QUESTIONS_LIMIT}
           />
           <Button 
             type="submit" 
-            disabled={isLoading || !input.trim()}
+            disabled={isLoading || !input.trim() || questionCount >= QUESTIONS_LIMIT}
             className={cn(
               "h-10 rounded-full hover:highlight-glow",
-              input.trim() ? "bg-highlight hover:bg-highlight/80" : "bg-white/10 hover:bg-white/20",
+              input.trim() && questionCount < QUESTIONS_LIMIT ? "bg-highlight hover:bg-highlight/80" : "bg-white/10 hover:bg-white/20",
               "flex items-center justify-center",
-              isLoading && "animate-pulse opacity-70"
+              isLoading && "animate-pulse opacity-70",
+              questionCount >= QUESTIONS_LIMIT && "cursor-not-allowed"
             )}
           >
             <Send className="w-5 h-5" />
           </Button>
         </form>
+        
+        {questionCount >= QUESTIONS_LIMIT && (
+          <div className="mt-2 glass-morphism p-3 rounded-lg flex items-center gap-2 text-red-400">
+            <AlertCircle size={16} />
+            <span className="text-sm">Sie haben das Limit von 50 Fragen pro Browsersitzung erreicht.</span>
+          </div>
+        )}
       </div>
     </div>
   );
