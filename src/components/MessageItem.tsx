@@ -24,6 +24,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isLast = false }) =>
   }, []);
 
   const isUser = message.role === 'user';
+  const isLoading = message.role === 'assistant' && message.content === '...';
   
   // Handling code blocks in the message
   const processMessageContent = (content: string) => {
@@ -108,23 +109,32 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isLast = false }) =>
           'glass-morphism rounded-2xl p-4',
           isUser ? 'rounded-tr-sm' : 'rounded-tl-sm',
           isUser ? 'bg-highlight/10' : 'bg-white/5',
-          isLast && isUser ? 'highlight-glow' : ''
+          isLast && isUser ? 'highlight-glow' : '',
+          isLoading ? 'animate-pulse' : ''
         )}>
-          {contentParts.map((part, index) => (
-            part.type === 'code' ? (
-              <CodeBlock 
-                key={index} 
-                language={part.language} 
-                code={part.content} 
-              />
-            ) : (
-              <div 
-                key={index} 
-                className="whitespace-pre-wrap mb-2 last:mb-0"
-                dangerouslySetInnerHTML={{ __html: part.content.replace(/\n/g, '<br/>') }}
-              />
-            )
-          ))}
+          {isLoading ? (
+            <div className="flex items-center space-x-1">
+              <span className="inline-block w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+              <span className="inline-block w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+              <span className="inline-block w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+            </div>
+          ) : (
+            contentParts.map((part, index) => (
+              part.type === 'code' ? (
+                <CodeBlock 
+                  key={index} 
+                  language={part.language} 
+                  code={part.content} 
+                />
+              ) : (
+                <div 
+                  key={index} 
+                  className="whitespace-pre-wrap mb-2 last:mb-0"
+                  dangerouslySetInnerHTML={{ __html: part.content.replace(/\n/g, '<br/>') }}
+                />
+              )
+            ))
+          )}
         </div>
       </div>
     </div>

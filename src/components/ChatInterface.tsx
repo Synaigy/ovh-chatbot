@@ -64,9 +64,21 @@ const ChatInterface: React.FC = () => {
     // Increment question counter
     setQuestionCount(prev => prev + 1);
     
+    // Add loading message bubble
+    const loadingMessage = { role: 'assistant' as const, content: '...' };
+    setMessages((prev) => [...prev, loadingMessage]);
+    
     try {
       const allMessages = [...messages, userMessage];
       const stream = await sendMessage(allMessages);
+      
+      // Remove the loading message and initialize a real assistant message
+      setMessages((prev) => {
+        const updated = [...prev];
+        // Remove the last message (which is the loading message)
+        updated.pop();
+        return updated;
+      });
       
       // Initialize assistant message
       const assistantMessage = { role: 'assistant' as const, content: '' };
@@ -90,6 +102,14 @@ const ChatInterface: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error sending message:', error);
+      
+      // Remove the loading message
+      setMessages((prev) => {
+        const updated = [...prev];
+        // Remove the last message (which is the loading message)
+        updated.pop();
+        return updated;
+      });
       
       // Create detailed error message
       let errorMessage = "Bei der Kommunikation mit der AI ist ein Fehler aufgetreten.";
