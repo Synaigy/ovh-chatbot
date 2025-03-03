@@ -40,7 +40,7 @@ const Index = () => {
             Unten findest du einen interaktiven Chatbot, der mit Deepseek läuft. Stelle ihm Fragen, teste seine Fähigkeiten und entdecke, wie leistungsstark moderne KI heute ist.
           </p>
           <div className="inline-block mb-8 highlight-text">
-            ➡ Probiere es aus! 🖥️💡 (Limit: 50 Fragen pro Browsersitzung)
+            ➡ Probiere es aus! 🖥️💡
           </div>
         </section>
         

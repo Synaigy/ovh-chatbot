@@ -148,39 +148,7 @@ const ChatInterface: React.FC = () => {
   return (
     <div className="w-full max-w-4xl mx-auto relative">
       <div className="flex flex-col h-full">
-        {/* Question Counter */}
-        <div className="mb-2 glass-morphism p-3 rounded-lg">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-sm text-white/70">Verbleibende Fragen:</span>
-            <span className={cn(
-              "font-medium",
-              questionsRemaining <= 10 ? "text-red-400" : "text-white"
-            )}>
-              {questionsRemaining} / {QUESTIONS_LIMIT}
-            </span>
-          </div>
-          <Progress 
-            value={progressPercentage} 
-            className={cn(
-              "h-2",
-              progressPercentage > 80 ? "bg-red-500/20" :
-              progressPercentage > 60 ? "bg-orange-500/20" :
-              "bg-green-500/20"
-            )}
-          />
-        </div>
-        
         <div className="chat-window-height overflow-y-auto p-4 glass-morphism rounded-t-xl scrollbar-thin">
-          {/* Display counter message at the top of the chat window */}
-          <div className="mb-4 p-2 text-center">
-            <span className={cn(
-              "text-sm",
-              questionsRemaining <= 10 ? "text-red-400" : "text-white/70"
-            )}>
-              Du hast noch {questionsRemaining} Fragen übrig.
-            </span>
-          </div>
-
           {/* Show error message when limit is reached */}
           {questionsRemaining <= 0 && (
             <div className="mb-4 p-3 bg-red-500/20 rounded-lg text-center">
@@ -254,6 +222,28 @@ const ChatInterface: React.FC = () => {
             <Send className="w-5 h-5" />
           </Button>
         </form>
+        
+        {/* Question Counter - Moved below chat interface */}
+        <div className="mt-2 glass-morphism p-3 rounded-lg">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-sm text-white/70">Verbleibende Fragen:</span>
+            <span className={cn(
+              "font-medium",
+              questionsRemaining <= 10 ? "text-red-400" : "text-white"
+            )}>
+              {questionsRemaining} / {QUESTIONS_LIMIT}
+            </span>
+          </div>
+          <Progress 
+            value={progressPercentage} 
+            className={cn(
+              "h-2",
+              progressPercentage > 80 ? "bg-red-500/20" :
+              progressPercentage > 60 ? "bg-orange-500/20" :
+              "bg-green-500/20"
+            )}
+          />
+        </div>
         
         {questionCount >= QUESTIONS_LIMIT && (
           <div className="mt-2 glass-morphism p-3 rounded-lg flex items-center gap-2 text-red-400">
