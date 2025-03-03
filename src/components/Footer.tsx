@@ -7,6 +7,10 @@ const Footer = () => {
   return (
     <footer className="w-full bg-black/30 border-t border-white/10 mt-16 py-8">
       <div className="container mx-auto px-4 md:px-6">
+        <div className="mb-6 text-center">
+          <p className="highlight-text text-xl font-medium">Deine Cloud Services: Nur einen Klick entfernt</p>
+        </div>
+        
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex flex-col md:flex-row items-center mb-6 md:mb-0">
             <div className="flex items-center mb-4 md:mb-0 md:mr-6">
@@ -27,7 +31,7 @@ const Footer = () => {
           
           <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
             <a 
-              href="mailto:sales@synaigy.com" 
+              href="https://meetings.hubspot.com/frank-hoerning/expertengesprach-kreativer-dialog?uuid=e99278b4-1943-4661-ab4e-9d07a49536cf" 
               className={cn(
                 "flex items-center space-x-2 px-5 py-2 rounded-full",
                 "glass-morphism hover:highlight-glow",
@@ -35,7 +39,7 @@ const Footer = () => {
               )}
             >
               <Mail size={18} className="text-highlight" />
-              <span>sales@synaigy.com</span>
+              <span>Expertengespräch vereinbaren</span>
             </a>
             <a 
               href="https://www.linkedin.com/in/achsnich/" 
