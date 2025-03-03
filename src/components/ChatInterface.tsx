@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -159,11 +158,13 @@ const ChatInterface: React.FC = () => {
               {questionsRemaining} / {QUESTIONS_LIMIT}
             </span>
           </div>
-          <Progress value={progressPercentage} className="h-2" 
-            indicatorClassName={cn(
-              progressPercentage > 80 ? "bg-red-500" :
-              progressPercentage > 60 ? "bg-orange-500" :
-              "bg-green-500"
+          <Progress 
+            value={progressPercentage} 
+            className={cn(
+              "h-2",
+              progressPercentage > 80 ? "bg-red-500/20" :
+              progressPercentage > 60 ? "bg-orange-500/20" :
+              "bg-green-500/20"
             )}
           />
         </div>

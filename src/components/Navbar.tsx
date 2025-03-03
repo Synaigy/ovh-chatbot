@@ -45,7 +45,7 @@ const Navbar = () => {
               alt="synaigy Logo" 
               className="h-8 w-auto"
             />
-            <span className="text-xl md:text-2xl font-bold highlight-text">OVHcloud AI Endpoint: Ein Tutorial der synaigy</span>
+            <span className="text-xl md:text-2xl font-bold highlight-text">OVHcloud AI Endpoint</span>
           </Link>
 
           {/* Desktop Navigation */}

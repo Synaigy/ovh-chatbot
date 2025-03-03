@@ -12,7 +12,7 @@ const Index = () => {
             <span className="text-highlight text-sm font-medium">Jetzt verfügbar</span>
           </div>
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
-            OVHcloud AI Endpoints: <span className="highlight-text">Leistungsstarke KI ohne Infrastrukturaufwand</span>
+            OVHcloud AI Endpoints: <span className="highlight-text">Ein Deepdive mit synaigy</span>
           </h1>
           <p className="text-lg md:text-xl text-white/80 mb-6 leading-relaxed">
             Mit den OVHcloud AI Endpoints bietet OVHcloud eine leistungsstarke Möglichkeit, künstliche Intelligenz einfach und skalierbar zu nutzen, ohne dass Nutzer sich um komplexe Infrastruktur kümmern müssen. Diese API-basierten Lösungen ermöglichen es, große Sprachmodelle (LLMs) und andere KI-Dienste direkt in eigene Anwendungen zu integrieren – schnell, sicher und effizient.
