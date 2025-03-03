@@ -1,6 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { send, X } from 'lucide-react';
+import { Send, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,12 +22,10 @@ const ChatInterface: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
-  // Scroll to bottom whenever messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
   
-  // Check local storage for API key
   useEffect(() => {
     const storedKey = localStorage.getItem('ovh_api_key');
     if (storedKey) {
@@ -151,7 +148,6 @@ const ChatInterface: React.FC = () => {
             </Button>
           </div>
           
-          {/* Messages container */}
           <div className="chat-window-height overflow-y-auto p-4 glass-morphism rounded-t-xl scrollbar-thin">
             {messages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 animate-fade-in">
@@ -190,7 +186,6 @@ const ChatInterface: React.FC = () => {
             )}
           </div>
           
-          {/* Input form */}
           <form 
             onSubmit={handleSubmit} 
             className="glass-morphism p-4 rounded-b-xl flex items-end gap-2 border-t border-white/5"
@@ -213,7 +208,7 @@ const ChatInterface: React.FC = () => {
                 isLoading && "animate-pulse opacity-70"
               )}
             >
-              <send className="w-5 h-5" />
+              <Send className="w-5 h-5" />
             </Button>
           </form>
         </div>
