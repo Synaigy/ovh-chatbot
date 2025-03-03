@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ExternalLink } from 'lucide-react';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -23,6 +23,11 @@ const Navbar = () => {
   const navItems = [
     { name: 'Home', path: '/' },
     { name: 'Tutorial', path: '/tutorial' },
+    { 
+      name: 'AI Endpoint', 
+      path: 'https://endpoints.ai.cloud.ovh.net',
+      external: true 
+    }
   ];
 
   return (
@@ -41,16 +46,29 @@ const Navbar = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
             {navItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={cn(
-                  'text-white/90 hover:highlight-text font-medium px-1 py-2',
-                  location.pathname === item.path && 'highlight-text'
-                )}
-              >
-                {item.name}
-              </Link>
+              item.external ? (
+                <a
+                  key={item.name}
+                  href={item.path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/90 hover:highlight-text font-medium px-1 py-2 flex items-center gap-1"
+                >
+                  {item.name}
+                  <ExternalLink size={14} />
+                </a>
+              ) : (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  className={cn(
+                    'text-white/90 hover:highlight-text font-medium px-1 py-2',
+                    location.pathname === item.path && 'highlight-text'
+                  )}
+                >
+                  {item.name}
+                </Link>
+              )
             ))}
           </div>
 
@@ -75,17 +93,31 @@ const Navbar = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col space-y-4">
             {navItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={cn(
-                  'text-white/90 hover:highlight-text font-medium px-1 py-2',
-                  location.pathname === item.path && 'highlight-text'
-                )}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.name}
-              </Link>
+              item.external ? (
+                <a
+                  key={item.name}
+                  href={item.path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/90 hover:highlight-text font-medium px-1 py-2 flex items-center gap-1"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {item.name}
+                  <ExternalLink size={14} />
+                </a>
+              ) : (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  className={cn(
+                    'text-white/90 hover:highlight-text font-medium px-1 py-2',
+                    location.pathname === item.path && 'highlight-text'
+                  )}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              )
             ))}
           </div>
         </div>
