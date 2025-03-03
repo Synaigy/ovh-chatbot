@@ -31,10 +31,9 @@ export const sendMessage = async (messages: any[]) => {
 
   try {
     const response = await openaiClient.chat.completions.create({
-      model: 'deepseek-r1-distill-llama-70b',
+      model: 'DeepSeek-R1-Distill-Llama-70B',
+      stream: true,
       messages,
-      temperature: 0.7,
-      max_tokens: 1000,
     });
 
     return response;

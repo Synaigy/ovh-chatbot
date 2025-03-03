@@ -20,6 +20,7 @@ const ChatInterface: React.FC = () => {
   const [apiKey, setApiKey] = useState('');
   const [isKeyProvided, setIsKeyProvided] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentAssistantMessage, setCurrentAssistantMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
@@ -54,16 +55,41 @@ const ChatInterface: React.FC = () => {
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+    setCurrentAssistantMessage('');
     
     try {
       const allMessages = [...messages, userMessage];
-      const response = await sendMessage(allMessages);
-      const assistantMessage = {
-        role: 'assistant' as const,
-        content: response.choices[0]?.message.content || "Entschuldigung, ich konnte keine Antwort generieren."
-      };
+      const stream = await sendMessage(allMessages);
       
-      setMessages((prev) => [...prev, assistantMessage]);
+      if (stream.choices && !stream.choices[0]?.delta?.content) {
+        // Not a stream, handle as before
+        const assistantMessage = {
+          role: 'assistant' as const,
+          content: stream.choices[0]?.message.content || "Entschuldigung, ich konnte keine Antwort generieren."
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+      } else {
+        // Handle streaming response
+        const assistantMessage = { role: 'assistant' as const, content: '' };
+        setMessages((prev) => [...prev, assistantMessage]);
+
+        let fullContent = '';
+        
+        for await (const chunk of stream) {
+          const content = chunk.choices[0]?.delta?.content || '';
+          fullContent += content;
+          
+          setCurrentAssistantMessage(fullContent);
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { 
+              ...updated[updated.length - 1], 
+              content: fullContent 
+            };
+            return updated;
+          });
+        }
+      }
     } catch (error: any) {
       console.error('Error sending message:', error);
       
