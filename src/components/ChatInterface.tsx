@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -63,11 +64,26 @@ const ChatInterface: React.FC = () => {
       };
       
       setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending message:', error);
+      
+      // Create detailed error message
+      let errorMessage = "Bei der Kommunikation mit der AI ist ein Fehler aufgetreten.";
+      if (error) {
+        if (error.message) {
+          errorMessage += ` Fehler: ${error.message}`;
+        }
+        if (error.status) {
+          errorMessage += ` (Status: ${error.status})`;
+        }
+        if (error.type) {
+          errorMessage += ` Typ: ${error.type}`;
+        }
+      }
+      
       toast({
         title: "Fehler",
-        description: "Bei der Kommunikation mit der AI ist ein Fehler aufgetreten.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

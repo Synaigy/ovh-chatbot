@@ -39,7 +39,12 @@ const Navbar = () => {
     >
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-3">
+            <img 
+              src="https://kampagnen.synaigy.com/hs-fs/hubfs/synaigy/synaigy_Assets_2021/synaigy_logo_weiß.png" 
+              alt="synaigy Logo" 
+              className="h-8 w-auto"
+            />
             <span className="text-xl md:text-2xl font-bold highlight-text">OVHcloud AI</span>
           </Link>
 
