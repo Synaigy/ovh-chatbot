@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -70,14 +69,34 @@ const ChatInterface: React.FC = () => {
       // Create detailed error message
       let errorMessage = "Bei der Kommunikation mit der AI ist ein Fehler aufgetreten.";
       if (error) {
+        // Extract as much information as possible from the error object
         if (error.message) {
           errorMessage += ` Fehler: ${error.message}`;
         }
         if (error.status) {
           errorMessage += ` (Status: ${error.status})`;
         }
+        
+        // Additional error details
         if (error.type) {
           errorMessage += ` Typ: ${error.type}`;
+        }
+        
+        // Check for error response details
+        if (error.response?.data?.message) {
+          errorMessage += ` Details: ${error.response.data.message}`;
+        }
+        
+        // If there's a headers with more information
+        if (error.headers) {
+          try {
+            const headerInfo = JSON.stringify(error.headers);
+            if (headerInfo && headerInfo !== '{}') {
+              errorMessage += ` Header-Info: ${headerInfo.substring(0, 100)}`;
+            }
+          } catch (e) {
+            // Ignore stringify errors
+          }
         }
       }
       
