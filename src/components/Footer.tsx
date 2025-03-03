@@ -34,11 +34,11 @@ const Footer = () => {
               href="https://meetings.hubspot.com/frank-hoerning/expertengesprach-kreativer-dialog?uuid=e99278b4-1943-4661-ab4e-9d07a49536cf" 
               className={cn(
                 "flex items-center space-x-2 px-5 py-2 rounded-full",
-                "glass-morphism hover:highlight-glow",
+                "bg-[#ea384c] hover:bg-[#ea384c]/90 text-white",
                 "transition-all duration-300"
               )}
             >
-              <Mail size={18} className="text-highlight" />
+              <Mail size={18} className="text-white" />
               <span>Expertengespräch vereinbaren</span>
             </a>
             <a 
