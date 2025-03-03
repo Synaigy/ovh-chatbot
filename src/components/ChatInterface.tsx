@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -48,7 +49,7 @@ const ChatInterface: React.FC = () => {
     if (questionCount >= QUESTIONS_LIMIT) {
       toast({
         title: "Limit erreicht",
-        description: "Sie haben das Limit von 50 Fragen pro Browsersitzung erreicht.",
+        description: "Voucher aufgebraucht, Versuch es morgen nochmal",
         variant: "destructive"
       });
       return;
@@ -170,6 +171,24 @@ const ChatInterface: React.FC = () => {
         </div>
         
         <div className="chat-window-height overflow-y-auto p-4 glass-morphism rounded-t-xl scrollbar-thin">
+          {/* Display counter message at the top of the chat window */}
+          <div className="mb-4 p-2 text-center">
+            <span className={cn(
+              "text-sm",
+              questionsRemaining <= 10 ? "text-red-400" : "text-white/70"
+            )}>
+              Du hast noch {questionsRemaining} Fragen übrig.
+            </span>
+          </div>
+
+          {/* Show error message when limit is reached */}
+          {questionsRemaining <= 0 && (
+            <div className="mb-4 p-3 bg-red-500/20 rounded-lg text-center">
+              <AlertCircle className="w-5 h-5 mx-auto mb-2" />
+              <p className="text-red-400 font-medium">Voucher aufgebraucht, Versuch es morgen nochmal</p>
+            </div>
+          )}
+          
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-6 animate-fade-in">
               <h3 className="text-xl font-semibold mb-4 highlight-text animate-pulse-subtle">
@@ -216,7 +235,7 @@ const ChatInterface: React.FC = () => {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeySubmit}
             placeholder={questionCount >= QUESTIONS_LIMIT 
-              ? "Sie haben das Limit von 50 Fragen erreicht" 
+              ? "Voucher aufgebraucht, Versuch es morgen nochmal" 
               : "Ihre Nachricht hier eingeben..."}
             className="flex-1 min-h-[60px] max-h-[200px] resize-none overflow-y-auto glass-morphism"
             disabled={isLoading || questionCount >= QUESTIONS_LIMIT}
@@ -239,7 +258,7 @@ const ChatInterface: React.FC = () => {
         {questionCount >= QUESTIONS_LIMIT && (
           <div className="mt-2 glass-morphism p-3 rounded-lg flex items-center gap-2 text-red-400">
             <AlertCircle size={16} />
-            <span className="text-sm">Sie haben das Limit von 50 Fragen pro Browsersitzung erreicht.</span>
+            <span className="text-sm">Voucher aufgebraucht, Versuch es morgen nochmal</span>
           </div>
         )}
       </div>
