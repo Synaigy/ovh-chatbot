@@ -91,9 +91,9 @@ const ChatInterface = () => {
       // Send to API with streaming
       const streamingResponse = await sendMessage(apiMessages);
       
-      // Create a new assistant message
+      // Create a new assistant message with empty content to show the loading animation
       const assistantMessage = { role: 'assistant' as const, content: '' };
-      setMessages([...messages, userMessage, assistantMessage]);
+      setMessages(prev => [...prev, assistantMessage]);
       
       // Handle the streaming response
       let fullContent = '';
@@ -201,7 +201,8 @@ const ChatInterface = () => {
               <MessageItem 
                 key={index}
                 message={message}
-                isLast={index === messages.length - 1 && isLoading}
+                isLast={index === messages.length - 1}
+                isLoading={index === messages.length - 1 && message.role === 'assistant' && message.content === '' && isLoading}
               />
             ))}
             <div ref={messagesEndRef} />

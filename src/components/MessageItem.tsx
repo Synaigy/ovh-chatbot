@@ -10,9 +10,10 @@ interface MessageItemProps {
     content: string;
   };
   isLast?: boolean;
+  isLoading?: boolean;
 }
 
-const MessageItem: React.FC<MessageItemProps> = ({ message, isLast = false }) => {
+const MessageItem: React.FC<MessageItemProps> = ({ message, isLast = false, isLoading = false }) => {
   const [visible, setVisible] = useState(false);
   
   useEffect(() => {
@@ -24,7 +25,6 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isLast = false }) =>
   }, []);
 
   const isUser = message.role === 'user';
-  const isLoading = message.role === 'assistant' && message.content === '';
   
   // Handling code blocks in the message
   const processMessageContent = (content: string) => {
