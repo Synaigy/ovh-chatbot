@@ -11,17 +11,16 @@ import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import { loadConfiguration, initializeConfigDetection } from "./services/configService";
+import { loadConfiguration } from "./services/configService";
 
 const queryClient = new QueryClient();
 
-// Component to handle config loading and change detection
+// Component to handle config loading once at startup
 const ConfigHandler = () => {
-  const location = useLocation();
   const [configLoaded, setConfigLoaded] = useState(false);
   
   useEffect(() => {
-    // Load configuration on first render with retry mechanism
+    // Load configuration only once on initial load
     const loadConfig = async () => {
       if (!configLoaded) {
         try {
@@ -44,11 +43,8 @@ const ConfigHandler = () => {
     
     loadConfig();
     
-    // Initialize config detection with proper timing - once per route change
-    const cleanup = initializeConfigDetection();
-    
-    return cleanup;
-  }, [location.pathname, configLoaded]);
+    // No cleanup needed as we're not setting up event listeners anymore
+  }, [configLoaded]);
   
   return null;
 };

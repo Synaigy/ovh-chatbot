@@ -1,7 +1,6 @@
 
 import React from 'react';
 import ChatInterface from '@/components/ChatInterface';
-import Footer from '@/components/Footer';
 import Banner from '@/components/Banner';
 
 const Index = () => {
@@ -49,7 +48,7 @@ const Index = () => {
         </section>
       </main>
       
-      <Footer />
+      {/* Remove the duplicate Footer from here */}
     </div>
   );
 };
