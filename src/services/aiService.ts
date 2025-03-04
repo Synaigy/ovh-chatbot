@@ -1,4 +1,3 @@
-
 import OpenAI from 'openai';
 import { API_CONFIG } from '../config/env';
 
@@ -9,8 +8,8 @@ const openaiClient = new OpenAI({
   dangerouslyAllowBrowser: true // Only for demo purposes
 });
 
-// Backend API URL for the counter
-const COUNTER_API_URL = 'http://localhost:3001/api';
+// Backend API URL for the counter - updated to use HTTPS and the proper domain
+const COUNTER_API_URL = 'https://chat.synaigy.cloud/api';
 
 export const incrementCounter = async () => {
   try {
