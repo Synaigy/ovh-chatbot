@@ -79,21 +79,7 @@ chatWithAI('Erkläre die Vorteile von KI in einfachen Worten.')
   .then(response => console.log(response))
   .catch(error => console.error(error));`;
 
-  const reactComponentCode = `import React, { useState } from 'react';
-import OpenAI from 'openai';
-
-const ChatbotForm = () => {
-  const [prompt, setPrompt] = useState('');
-  const [response, setResponse] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState([]);
-
-  // OpenAI-Client initialisieren
-  const openaiClient = new OpenAI({
-    apiKey: 'your-api-key',
-    baseURL: 'https://deepseek-r1-distill-llama-70b.endpoints.kepler.ai.cloud.ovh.net/api/openai_compat/v1',
-    dangerouslyAllowBrowser: true // Nur für Demo-Zwecke!
-  });
+  const reactComponentCode = `
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -109,28 +95,12 @@ const ChatbotForm = () => {
     ];
     setMessages(newMessages);
     
-    try {
-      // API-Anfrage an das LLM senden
-      const completion = await openaiClient.chat.completions.create({
-        model: 'DeepSeek-R1-Distill-Llama-70B',
-        messages: newMessages,
-        stream: true,
-      });
-      
-      let fullResponse = '';
-      
-      // Stream-Verarbeitung für Live-Antwort
-      for await (const chunk of completion) {
-        if (chunk.choices[0]?.delta?.content) {
-          fullResponse += chunk.choices[0].delta.content;
-          setResponse(fullResponse);
-        }
-      }
+    
       
       // Antwort zum Nachrichtenverlauf hinzufügen
       setMessages([
         ...newMessages,
-        { role: 'assistant', content: fullResponse }
+        { role: 'assistant', content: chatWithAI(newMessages) }
       ]);
       
       setPrompt('');
