@@ -1,17 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { loadConfiguration, saveConfiguration } from '@/services/configService';
-import { getCounter } from '@/services/aiService';
+import { getCounter, getConfig } from '@/services/aiService';
 import Banner from '@/components/Banner';
 import LoginForm from '@/components/admin/LoginForm';
 import StatisticsCard from '@/components/admin/StatisticsCard';
 import ApiConfigForm from '@/components/admin/ApiConfigForm';
 import ContactConfigForm from '@/components/admin/ContactConfigForm';
 import CompanyConfigForm from '@/components/admin/CompanyConfigForm';
-
-// Admin password (temporary solution until we move this to the database as well)
-const ADMIN_PASSWORD = 'synaigy!2024#';
 
 const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -37,10 +33,11 @@ const Admin = () => {
       },
     }
   });
+  const [adminPassword, setAdminPassword] = useState('');
   
   const { toast } = useToast();
 
-  // Load configuration from the database
+  // Load configuration from the database including admin password
   useEffect(() => {
     const loadConfig = async () => {
       if (isAuthenticated) {
@@ -55,6 +52,12 @@ const Admin = () => {
               },
               footer: dbConfig.footer
             });
+          }
+          
+          // Get admin password from config
+          const fullConfig = await getConfig();
+          if (fullConfig && fullConfig.ADMIN_PASSWORD) {
+            setAdminPassword(fullConfig.ADMIN_PASSWORD);
           }
         } catch (error) {
           console.error("Error loading configuration:", error);
@@ -71,6 +74,22 @@ const Admin = () => {
     
     loadConfig();
   }, [isAuthenticated, toast]);
+
+  // Also load admin password for login authentication
+  useEffect(() => {
+    const loadAdminPassword = async () => {
+      try {
+        const fullConfig = await getConfig();
+        if (fullConfig && fullConfig.ADMIN_PASSWORD) {
+          setAdminPassword(fullConfig.ADMIN_PASSWORD);
+        }
+      } catch (error) {
+        console.error("Error loading admin password:", error);
+      }
+    };
+    
+    loadAdminPassword();
+  }, []);
 
   useEffect(() => {
     const loadCounter = async () => {
@@ -97,7 +116,7 @@ const Admin = () => {
   }, [isAuthenticated]);
 
   const handleLogin = (password: string) => {
-    if (password === ADMIN_PASSWORD) {
+    if (adminPassword && password === adminPassword) {
       setIsAuthenticated(true);
       setAuthError('');
     } else {
