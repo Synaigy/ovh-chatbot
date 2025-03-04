@@ -1,4 +1,3 @@
-
 import OpenAI from 'openai';
 import { API_CONFIG } from '../config/env';
 
@@ -9,26 +8,20 @@ const openaiClient = new OpenAI({
   dangerouslyAllowBrowser: true // Only for demo purposes
 });
 
+// Use localStorage to persist the counter value
+const COUNTER_KEY = 'chat_query_counter';
+
 export const incrementCounter = async () => {
   try {
-    // Fetch the current counter value
-    const response = await fetch('/src/config/counter.txt');
-    const countText = await response.text();
-    // Ensure we're parsing a clean number by trimming whitespace
-    const count = parseInt(countText.trim() || '0', 10);
-    // Check if count is a valid number
-    const newCount = isNaN(count) ? 1 : count + 1;
+    // Get current count from localStorage
+    const currentCountStr = localStorage.getItem(COUNTER_KEY) || '0';
+    const currentCount = parseInt(currentCountStr, 10);
     
-    // Write the new counter value to the file
-    // In a real application, this would be an API call to update a database
-    // For demonstration purposes, we'll just update the counter in memory
-    await fetch('/src/config/counter.txt', {
-      method: 'POST',
-      body: newCount.toString(),
-      headers: {
-        'Content-Type': 'text/plain'
-      }
-    });
+    // Increment count
+    const newCount = isNaN(currentCount) ? 1 : currentCount + 1;
+    
+    // Store back in localStorage
+    localStorage.setItem(COUNTER_KEY, newCount.toString());
     
     console.log(`Counter incremented to ${newCount}`);
     return newCount;
@@ -40,11 +33,10 @@ export const incrementCounter = async () => {
 
 export const getCounter = async () => {
   try {
-    // Add cache-busting parameter to avoid browser caching
-    const response = await fetch(`/src/config/counter.txt?_t=${Date.now()}`);
-    const countText = await response.text();
-    // Ensure we're parsing a clean number
-    const count = parseInt(countText.trim() || '0', 10);
+    // Get count from localStorage
+    const countStr = localStorage.getItem(COUNTER_KEY) || '0';
+    const count = parseInt(countStr, 10);
+    
     // If NaN, return 0 instead
     return isNaN(count) ? 0 : count;
   } catch (error) {
