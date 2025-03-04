@@ -12,12 +12,14 @@ import Admin from "./pages/Admin";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { getConfig, forceConfigRefresh } from "./services/aiService";
+import { toast } from "@/components/ui/use-toast";
 
 const queryClient = new QueryClient();
 
 // Component to handle config loading once at startup
 const ConfigHandler = () => {
   const [configLoaded, setConfigLoaded] = useState(false);
+  const [configError, setConfigError] = useState(false);
   
   useEffect(() => {
     // Load configuration only once on initial load
@@ -25,20 +27,36 @@ const ConfigHandler = () => {
       if (!configLoaded) {
         try {
           // Force a fresh config fetch on startup
-          await forceConfigRefresh();
+          const refreshSuccess = await forceConfigRefresh();
           
-          const config = await getConfig();
-          if (config) {
+          if (refreshSuccess) {
             setConfigLoaded(true);
+            setConfigError(false);
             console.log('Initial configuration loaded via ConfigHandler');
           } else {
-            console.log('Failed to load initial configuration, will use defaults');
-            // Still mark as loaded to prevent loops, we'll use defaults
+            console.log('Failed to load initial configuration');
+            setConfigError(true);
+            
+            toast({
+              title: "Konfigurationsfehler",
+              description: "Die Konfiguration konnte nicht von der Datenbank geladen werden. Bitte wenden Sie sich an den Administrator.",
+              variant: "destructive",
+            });
+            
+            // Still mark as loaded to prevent loops
             setConfigLoaded(true);
           }
         } catch (error) {
           console.error('Error in ConfigHandler loadConfiguration:', error);
-          // Still mark as loaded to prevent loops, we'll use defaults
+          setConfigError(true);
+          
+          toast({
+            title: "Konfigurationsfehler",
+            description: "Die Konfiguration konnte nicht von der Datenbank geladen werden. Bitte wenden Sie sich an den Administrator.",
+            variant: "destructive",
+          });
+          
+          // Still mark as loaded to prevent loops
           setConfigLoaded(true);
         }
       }
@@ -48,17 +66,37 @@ const ConfigHandler = () => {
     
     // Set up periodic refresh of configuration
     const refreshInterval = setInterval(() => {
-      forceConfigRefresh().then(() => {
-        console.log('Configuration refreshed periodically');
+      forceConfigRefresh().then((success) => {
+        if (success) {
+          console.log('Configuration refreshed periodically');
+          if (configError) {
+            setConfigError(false);
+            
+            toast({
+              title: "Konfiguration wiederhergestellt",
+              description: "Die Verbindung zur Datenbank wurde wiederhergestellt.",
+              variant: "default",
+            });
+          }
+        } else if (!configError) {
+          setConfigError(true);
+          
+          toast({
+            title: "Konfigurationsfehler",
+            description: "Die Konfiguration konnte nicht von der Datenbank geladen werden. Bitte wenden Sie sich an den Administrator.",
+            variant: "destructive",
+          });
+        }
       }).catch(error => {
         console.error('Error refreshing configuration:', error);
+        setConfigError(true);
       });
-    }, 300000); // Refresh every 5 minutes
+    }, 60000); // Refresh every minute
     
     return () => {
       clearInterval(refreshInterval);
     };
-  }, [configLoaded]);
+  }, [configLoaded, configError]);
   
   return null;
 };

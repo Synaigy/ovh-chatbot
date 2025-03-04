@@ -1,5 +1,6 @@
 
 import OpenAI from 'openai';
+import { toast } from '@/components/ui/use-toast';
 
 // Backend API URL for the counter and configuration - using HTTPS and the proper domain
 const API_URL = 'https://chat.synaigy.cloud/api';
@@ -8,18 +9,6 @@ const API_URL = 'https://chat.synaigy.cloud/api';
 let apiConfig = {
   ENDPOINT: '',
   API_KEY: ''
-};
-
-// Default configuration to use ONLY when database is completely unavailable
-const DEFAULT_CONFIG = {
-  API_ENDPOINT: 'https://deepseek-r1-distill-llama-70b.endpoints.kepler.ai.cloud.ovh.net/api/openai_compat/v1',
-  API_KEY: 'placeholder-key-only-for-ui-rendering',
-  CONTACT_NAME: 'Support Team',
-  CONTACT_TITLE: 'Customer Support',
-  CONTACT_PHOTO: 'https://profile-images.xing.com/images/0bac708fee0a79e6e7186a5fb08af312-26/marc-achsnich.1024x1024.jpg',
-  CONTACT_MEETING: '#',
-  CONTACT_LINKEDIN: '#',
-  COMPANY_NAME: 'Synaigy GmbH'
 };
 
 // Flag to track if we've already shown a database connection error toast
@@ -126,24 +115,18 @@ export const getConfig = async () => {
   } catch (error) {
     console.error('Error getting configuration:', error);
     
-    // Only use DEFAULT_CONFIG if we've never successfully fetched from the database
-    if (hasSuccessfullyFetchedConfig) {
-      console.log('Using last known good configuration instead of DEFAULT_CONFIG');
-      // Return the current apiConfig instead of default if we've had a successful fetch before
-      return {
-        API_ENDPOINT: apiConfig.ENDPOINT,
-        API_KEY: apiConfig.API_KEY,
-        // Include any other persisted config values we have
-        ...DEFAULT_CONFIG,  // Use defaults only for missing values
-        // Override with any values we actually have
-        ...(apiConfig.ENDPOINT ? { API_ENDPOINT: apiConfig.ENDPOINT } : {}),
-        ...(apiConfig.API_KEY ? { API_KEY: apiConfig.API_KEY } : {})
-      };
+    // If we've never successfully fetched from the database, show an error toast
+    if (!hasSuccessfullyFetchedConfig && !dbErrorToastShown) {
+      toast({
+        title: "Konfigurationsfehler",
+        description: "Die Konfiguration konnte nicht von der Datenbank geladen werden. Bitte wenden Sie sich an den Administrator.",
+        variant: "destructive",
+      });
+      dbErrorToastShown = true;
     }
     
-    // Return default config only when database has never been available
-    console.warn('Using DEFAULT_CONFIG as fallback since database has never been available');
-    return DEFAULT_CONFIG;
+    // Return null to indicate error
+    return null;
   }
 };
 
@@ -175,6 +158,13 @@ export const updateConfig = async (newConfig: any) => {
     return { success: true, data: updatedConfig };
   } catch (error) {
     console.error('Error updating configuration:', error);
+    
+    toast({
+      title: "Konfigurationsfehler",
+      description: "Die Konfiguration konnte nicht aktualisiert werden. Bitte wenden Sie sich an den Administrator.",
+      variant: "destructive",
+    });
+    
     return { success: false, error };
   }
 };
@@ -190,7 +180,7 @@ export const sendMessage = async (messages: any[]) => {
         initializeOpenAIClient(config);
       } else {
         console.error('Failed to get valid API configuration');
-        throw new Error('Invalid API configuration');
+        throw new Error('Konfiguration konnte nicht geladen werden. Bitte wenden Sie sich an den Administrator.');
       }
     }
     

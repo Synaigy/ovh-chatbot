@@ -1,4 +1,3 @@
-
 import { toast } from '@/components/ui/use-toast';
 import { getConfig, updateConfig } from './aiService';
 
@@ -46,9 +45,20 @@ export const loadConfiguration = async () => {
     // Reset connection error count on successful fetch
     connectionErrorCount = 0;
     
-    // Skip if config is incomplete
+    // Skip if config is incomplete or null (indicates error)
     if (!config || !config.API_ENDPOINT || !config.API_KEY) {
-      console.log('Skipping loadConfiguration - incomplete config data');
+      console.log('Skipping loadConfiguration - incomplete config data or config fetch error');
+      
+      // Show error toast if not already shown
+      if (!dbErrorToastShown) {
+        toast({
+          title: "Konfigurationsfehler",
+          description: "Die Konfiguration konnte nicht von der Datenbank geladen werden. Bitte wenden Sie sich an den Administrator.",
+          variant: "destructive",
+        });
+        dbErrorToastShown = true;
+      }
+      
       return null;
     }
     
@@ -86,11 +96,11 @@ export const loadConfiguration = async () => {
     // Increment connection error count
     connectionErrorCount++;
     
-    // Only show toast for database errors after multiple failures
-    if (connectionErrorCount >= MAX_CONNECTION_ERRORS && !dbErrorToastShown) {
+    // Show toast for database errors
+    if (!dbErrorToastShown) {
       toast({
-        title: "Verbindungsproblem",
-        description: "Die Verbindung zur Datenbank konnte nicht hergestellt werden. Es wird mit lokalen Einstellungen fortgefahren.",
+        title: "Konfigurationsfehler",
+        description: "Die Konfiguration konnte nicht von der Datenbank geladen werden. Bitte wenden Sie sich an den Administrator.",
         variant: "destructive",
       });
       dbErrorToastShown = true;
@@ -216,6 +226,17 @@ export const detectConfigChanges = async () => {
       // Skip if config is empty or incomplete
       if (!newConfig || !newConfig.API_ENDPOINT || !newConfig.API_KEY) {
         console.log('Skipping config update - incomplete config data');
+        
+        // Show error toast if not already shown
+        if (!dbErrorToastShown) {
+          toast({
+            title: "Konfigurationsfehler",
+            description: "Die Konfiguration konnte nicht von der Datenbank geladen werden. Bitte wenden Sie sich an den Administrator.",
+            variant: "destructive",
+          });
+          dbErrorToastShown = true;
+        }
+        
         isConfigDetectionRunning = false;
         return false;
       }
@@ -327,11 +348,11 @@ export const detectConfigChanges = async () => {
       // Increment connection error count
       connectionErrorCount++;
       
-      // Only show toast for database errors after multiple failures
-      if (connectionErrorCount >= MAX_CONNECTION_ERRORS && !dbErrorToastShown) {
+      // Show toast for database errors
+      if (!dbErrorToastShown) {
         toast({
-          title: "Verbindungsproblem",
-          description: "Die Verbindung zur Datenbank konnte nicht hergestellt werden. Es wird mit lokalen Einstellungen fortgefahren.",
+          title: "Konfigurationsfehler",
+          description: "Die Konfiguration konnte nicht von der Datenbank geladen werden. Bitte wenden Sie sich an den Administrator.",
           variant: "destructive",
         });
         dbErrorToastShown = true;

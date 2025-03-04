@@ -1,10 +1,11 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, AlertCircle } from 'lucide-react';
+import { Send, AlertCircle, DatabaseOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import MessageItem from './MessageItem';
-import { sendMessage } from '@/services/aiService';
+import { sendMessage, isClientInitialized } from '@/services/aiService';
 import { useToast } from '@/components/ui/use-toast';
 import { Progress } from '@/components/ui/progress';
 
@@ -24,6 +25,7 @@ const ChatInterface: React.FC = () => {
     const savedCount = sessionStorage.getItem('questionCount');
     return savedCount ? parseInt(savedCount, 10) : 0;
   });
+  const [configLoaded, setConfigLoaded] = useState<boolean>(isClientInitialized());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
@@ -38,6 +40,22 @@ const ChatInterface: React.FC = () => {
     sessionStorage.setItem('questionCount', questionCount.toString());
   }, [questionCount]);
   
+  // Check if client is initialized
+  useEffect(() => {
+    const checkConfig = () => {
+      const isInitialized = isClientInitialized();
+      setConfigLoaded(isInitialized);
+    };
+    
+    // Check immediately on mount
+    checkConfig();
+    
+    // Set interval to check periodically
+    const intervalId = setInterval(checkConfig, 15000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
+  
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -46,6 +64,16 @@ const ChatInterface: React.FC = () => {
     e.preventDefault();
     
     if (!input.trim()) return;
+    
+    // Check if configuration is loaded
+    if (!configLoaded) {
+      toast({
+        title: "Konfigurationsfehler",
+        description: "Die Konfiguration konnte nicht geladen werden. Bitte wenden Sie sich an den Administrator.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     // Check if question limit reached
     if (questionCount >= QUESTIONS_LIMIT) {
@@ -189,6 +217,17 @@ const ChatInterface: React.FC = () => {
   return (
     <div className="w-full max-w-4xl mx-auto relative">
       <div className="flex flex-col h-full">
+        {/* Configuration Error Banner */}
+        {!configLoaded && (
+          <div className="mb-4 p-4 bg-red-500/20 rounded-lg flex items-center gap-3">
+            <DatabaseOff className="w-6 h-6 text-red-400" />
+            <div>
+              <h3 className="font-medium text-red-400">Konfigurationsfehler</h3>
+              <p className="text-white/70">Die Konfiguration konnte nicht von der Datenbank geladen werden. Bitte wenden Sie sich an den Administrator.</p>
+            </div>
+          </div>
+        )}
+      
         <div className="chat-window-height overflow-y-auto p-4 glass-morphism rounded-t-xl scrollbar-thin">
           {/* Show error message when limit is reached */}
           {questionsRemaining <= 0 && (
@@ -243,9 +282,10 @@ const ChatInterface: React.FC = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeySubmit}
-            placeholder={questionCount >= QUESTIONS_LIMIT 
-              ? "Voucher aufgebraucht, Versuch es morgen nochmal" 
-              : "Ihre Nachricht hier eingeben..."}
+            placeholder={!configLoaded ? "Konfigurationsfehler: Bitte wenden Sie sich an den Administrator" :
+              questionCount >= QUESTIONS_LIMIT 
+                ? "Voucher aufgebraucht, Versuch es morgen nochmal" 
+                : "Ihre Nachricht hier eingeben..."}
             className="flex-1 min-h-[60px] max-h-[200px] resize-none overflow-y-auto glass-morphism text-white bg-transparent"
             style={{
               WebkitAppearance: "none",
@@ -253,17 +293,19 @@ const ChatInterface: React.FC = () => {
               caretColor: "white",
               borderColor: "rgba(255, 255, 255, 0.1)",
             }}
-            disabled={isLoading || questionCount >= QUESTIONS_LIMIT}
+            disabled={isLoading || questionCount >= QUESTIONS_LIMIT || !configLoaded}
           />
           <Button 
             type="submit" 
-            disabled={isLoading || !input.trim() || questionCount >= QUESTIONS_LIMIT}
+            disabled={isLoading || !input.trim() || questionCount >= QUESTIONS_LIMIT || !configLoaded}
             className={cn(
               "h-10 rounded-full hover:highlight-glow",
-              input.trim() && questionCount < QUESTIONS_LIMIT ? "bg-highlight hover:bg-highlight/80" : "bg-white/10 hover:bg-white/20",
+              input.trim() && questionCount < QUESTIONS_LIMIT && configLoaded 
+                ? "bg-highlight hover:bg-highlight/80" 
+                : "bg-white/10 hover:bg-white/20",
               "flex items-center justify-center",
               isLoading && "animate-pulse opacity-70",
-              questionCount >= QUESTIONS_LIMIT && "cursor-not-allowed"
+              (questionCount >= QUESTIONS_LIMIT || !configLoaded) && "cursor-not-allowed"
             )}
           >
             <Send className="w-5 h-5" />
@@ -296,6 +338,13 @@ const ChatInterface: React.FC = () => {
           <div className="mt-2 glass-morphism p-3 rounded-lg flex items-center gap-2 text-red-400">
             <AlertCircle size={16} />
             <span className="text-sm">Voucher aufgebraucht, Versuch es morgen nochmal</span>
+          </div>
+        )}
+        
+        {!configLoaded && (
+          <div className="mt-2 glass-morphism p-3 rounded-lg flex items-center gap-2 text-red-400">
+            <DatabaseOff size={16} />
+            <span className="text-sm">Konfigurationsfehler: Bitte wenden Sie sich an den Administrator</span>
           </div>
         )}
       </div>
