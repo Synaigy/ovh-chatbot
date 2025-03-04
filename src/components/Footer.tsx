@@ -1,10 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { Mail, Linkedin } from 'lucide-react';
+import { Mail, Linkedin, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getConfig, forceConfigRefresh } from '@/services/aiService';
 
-const Footer = () => {
+interface FooterProps {
+  configError?: boolean;
+}
+
+const Footer = ({ configError = false }: FooterProps) => {
   const [config, setConfig] = useState({
     CONTACT_PERSON: {
       NAME: '',
@@ -18,6 +22,8 @@ const Footer = () => {
     }
   });
   
+  const [loadError, setLoadError] = useState(false);
+  
   useEffect(() => {
     // Load configuration directly from the API with a forced refresh
     const loadConfig = async () => {
@@ -27,7 +33,7 @@ const Footer = () => {
         
         // Then get the config
         const dbConfig = await getConfig();
-        if (dbConfig) {
+        if (dbConfig && dbConfig.CONTACT_NAME && dbConfig.COMPANY_NAME) {
           setConfig({
             CONTACT_PERSON: {
               NAME: dbConfig.CONTACT_NAME || '',
@@ -40,9 +46,13 @@ const Footer = () => {
               NAME: dbConfig.COMPANY_NAME || ''
             }
           });
+          setLoadError(false);
+        } else {
+          setLoadError(true);
         }
       } catch (error) {
         console.error('Error loading footer configuration:', error);
+        setLoadError(true);
       }
     };
     
@@ -63,6 +73,44 @@ const Footer = () => {
   }, []);
   
   const { CONTACT_PERSON, COMPANY } = config;
+  const isError = configError || loadError;
+  
+  // Show error state if configuration couldn't be loaded
+  if (isError) {
+    return (
+      <footer className="w-full bg-black/30 border-t border-white/10 mt-16 py-8">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="flex flex-col items-center justify-center text-center p-4">
+            <AlertTriangle className="h-8 w-8 text-red-500 mb-2" />
+            <h3 className="text-lg font-medium text-red-400">Konfigurationsfehler</h3>
+            <p className="text-white/70 max-w-lg mx-auto mt-2">
+              Die Konfiguration konnte nicht von der Datenbank geladen werden. 
+              Bitte wenden Sie sich an den Administrator.
+            </p>
+          </div>
+          
+          <div className="mt-8 pt-6 border-t border-white/10 text-center text-sm text-white/50">
+            <p>© {new Date().getFullYear()}. Alle Rechte vorbehalten.</p>
+          </div>
+        </div>
+      </footer>
+    );
+  }
+  
+  // Only show contact information if we have proper data
+  const hasContactInfo = CONTACT_PERSON.NAME && COMPANY.NAME;
+  
+  if (!hasContactInfo) {
+    return (
+      <footer className="w-full bg-black/30 border-t border-white/10 mt-16 py-8">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="text-center">
+            <p className="text-white/50">Lade Konfiguration...</p>
+          </div>
+        </div>
+      </footer>
+    );
+  }
   
   return (
     <footer className="w-full bg-black/30 border-t border-white/10 mt-16 py-8">

@@ -101,24 +101,58 @@ const ConfigHandler = () => {
   return null;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Navbar />
-        <ConfigHandler />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/tutorial" element={<Tutorial />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Footer />
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [configLoaded, setConfigLoaded] = useState(false);
+  const [configError, setConfigError] = useState(false);
+  
+  // Initial configuration check at app startup
+  useEffect(() => {
+    const initialConfigCheck = async () => {
+      try {
+        const config = await getConfig();
+        if (config && config.API_ENDPOINT && config.API_KEY) {
+          setConfigLoaded(true);
+        } else {
+          setConfigError(true);
+          toast({
+            title: "Konfigurationsfehler",
+            description: "Die Konfiguration konnte nicht geladen werden. Bitte wenden Sie sich an den Administrator.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("Error loading initial configuration:", error);
+        setConfigError(true);
+        toast({
+          title: "Konfigurationsfehler",
+          description: "Die Konfiguration konnte nicht geladen werden. Bitte wenden Sie sich an den Administrator.",
+          variant: "destructive",
+        });
+      }
+    };
+    
+    initialConfigCheck();
+  }, []);
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Navbar />
+          <ConfigHandler />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/tutorial" element={<Tutorial />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Footer configError={configError} />
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

@@ -26,12 +26,14 @@ interface AdminConfigContextType {
   config: ConfigState;
   isLoading: boolean;
   isSaving: boolean;
+  hasError: boolean;
   handleApiChange: (key: 'endpoint' | 'apiKey', value: string) => void;
   handleContactChange: (field: string, value: string) => void;
   handleCompanyNameChange: (value: string) => void;
   handleSave: () => Promise<void>;
 }
 
+// Empty initial config (no default values)
 const initialConfig = {
   api: {
     endpoint: '',
@@ -65,6 +67,7 @@ export const AdminConfigProvider = ({ children }: { children: ReactNode }) => {
   const [config, setConfig] = useState<ConfigState>(initialConfig);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [hasError, setHasError] = useState(false);
   
   const { toast } = useToast();
 
@@ -135,12 +138,14 @@ export const AdminConfigProvider = ({ children }: { children: ReactNode }) => {
     config,
     isLoading,
     isSaving,
+    hasError,
     handleApiChange,
     handleContactChange,
     handleCompanyNameChange,
     handleSave,
     setConfig,
-    setIsLoading
+    setIsLoading,
+    setHasError
   };
 
   return (

@@ -4,7 +4,7 @@ import { Bot, User, Send, ArrowDown, Database } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import MessageItem from './MessageItem';
-import { sendMessage, incrementCounter, getCounter } from '@/services/aiService';
+import { sendMessage, incrementCounter, getCounter, getConfig } from '@/services/aiService';
 import { useToast } from "@/hooks/use-toast";
 import CodeBlock from './CodeBlock';
 
@@ -14,9 +14,29 @@ const ChatInterface = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [configError, setConfigError] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+  
+  // Check configuration on load
+  useEffect(() => {
+    const checkConfig = async () => {
+      try {
+        const config = await getConfig();
+        if (!config || !config.API_ENDPOINT || !config.API_KEY) {
+          setConfigError(true);
+        } else {
+          setConfigError(false);
+        }
+      } catch (error) {
+        console.error('Configuration error:', error);
+        setConfigError(true);
+      }
+    };
+    
+    checkConfig();
+  }, []);
   
   useEffect(() => {
     const scrollToBottom = () => {
@@ -62,7 +82,7 @@ const ChatInterface = () => {
     e.preventDefault();
     
     // Don't allow empty submissions
-    if (!input.trim()) return;
+    if (!input.trim() || configError) return;
     
     // Add user message to the chat
     const userMessage = { role: 'user' as const, content: input };
@@ -128,13 +148,15 @@ const ChatInterface = () => {
         variant: "destructive",
       });
       
+      // Check if it's a configuration error
+      if (error instanceof Error && error.message.includes('Konfiguration')) {
+        setConfigError(true);
+      }
+      
     } finally {
       setIsLoading(false);
     }
   };
-  
-  // Display configuration error state
-  const [configError, setConfigError] = useState(false);
   
   // Check for any messages and configuration status
   const isEmpty = messages.length === 0;
@@ -202,7 +224,7 @@ const ChatInterface = () => {
                 key={index}
                 message={message}
                 isLast={index === messages.length - 1}
-                isLoading={index === messages.length - 1 && message.role === 'assistant' && message.content === '' && isLoading}
+                isLoading={index === messages.length - 1 && message.role === 'assistant' && isLoading}
               />
             ))}
             <div ref={messagesEndRef} />
@@ -227,12 +249,12 @@ const ChatInterface = () => {
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                if (!isLoading && input.trim()) {
+                if (!isLoading && input.trim() && !configError) {
                   handleSubmit(e as any);
                 }
               }
             }}
-            placeholder="Ich bin hier, um Ihre Fragen zu beantworten..."
+            placeholder={hasError ? "Konfigurationsfehler. Bitte kontaktieren Sie den Administrator." : "Ich bin hier, um Ihre Fragen zu beantworten..."}
             className="flex-1 bg-white/5 border-white/10 placeholder:text-white/50 resize-none"
             disabled={isLoading || hasError}
             rows={1}
