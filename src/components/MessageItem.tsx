@@ -113,7 +113,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isLast = false, isLo
           isLoading ? 'animate-pulse' : ''
         )}>
           {isLoading ? (
-            <div className="flex items-center">
+            <div className="flex items-center overflow-visible">
               <div className="text-white font-medium">
                 <span className="inline-block animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
                 <span className="inline-block animate-bounce" style={{ animationDelay: '150ms' }}>.</span>

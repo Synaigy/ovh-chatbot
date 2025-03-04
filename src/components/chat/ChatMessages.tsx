@@ -48,8 +48,8 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       // Store the current scroll position before scrolling
       const { scrollTop } = containerRef.current || { scrollTop: 0 };
       
-      // Use setTimeout to ensure DOM has updated
-      setTimeout(() => {
+      // Use requestAnimationFrame to ensure DOM has updated before scrolling
+      requestAnimationFrame(() => {
         scrollToBottom();
         
         // Restore scroll position if this was a user message being sent
@@ -58,7 +58,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
             containerRef.current.scrollTop = scrollTop;
           }
         }
-      }, 10);
+      });
     }
   }, [messages, userScrolled]);
   
@@ -132,7 +132,11 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   }
   
   return (
-    <div ref={containerRef} className="h-full overflow-y-auto scrollbar-thin" style={{ position: 'relative' }}>
+    <div 
+      ref={containerRef} 
+      className="h-full overflow-y-auto scrollbar-thin" 
+      style={{ position: 'relative', overflowAnchor: 'auto' }}
+    >
       <div className="space-y-4">
         {messages.map((message, index) => (
           <MessageItem 
@@ -142,7 +146,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
             isLoading={index === messages.length - 1 && message.role === 'assistant' && isLoading}
           />
         ))}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} style={{ overflowAnchor: 'auto' }} />
       </div>
       
       {showScrollButton && (
