@@ -1,3 +1,4 @@
+
 import OpenAI from 'openai';
 import { API_CONFIG } from '../config/env';
 
@@ -9,12 +10,12 @@ const openaiClient = new OpenAI({
 });
 
 // Backend API URL for the counter - updated to use HTTPS and the proper domain
-const COUNTER_API_URL = 'https://chat.synaigy.cloud/api';
+const API_URL = 'https://chat.synaigy.cloud/api';
 
 export const incrementCounter = async () => {
   try {
     // Call the backend API to increment the counter
-    const response = await fetch(`${COUNTER_API_URL}/counter/increment`, {
+    const response = await fetch(`${API_URL}/counter/increment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'text/plain'
@@ -39,7 +40,7 @@ export const incrementCounter = async () => {
 export const getCounter = async () => {
   try {
     // Call the backend API to get the counter value
-    const response = await fetch(`${COUNTER_API_URL}/counter`);
+    const response = await fetch(`${API_URL}/counter`);
     
     if (!response.ok) {
       throw new Error(`Failed to get counter: ${response.status} ${response.statusText}`);
@@ -56,24 +57,36 @@ export const getCounter = async () => {
   }
 };
 
+export const getConfig = async () => {
+  try {
+    const response = await fetch(`${API_URL}/config`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get config: ${response.status} ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error getting configuration:', error);
+    throw error;
+  }
+};
+
 export const updateConfig = async (newConfig: any) => {
   try {
-    // In a real application, this would be a server-side API call to update env.ts
-    // For this demo, we're simulating a successful update
-    console.log('Configuration updated:', newConfig);
+    const response = await fetch(`${API_URL}/config`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(newConfig)
+    });
     
-    // In a production environment, we would:
-    // 1. Send the new config to a backend endpoint
-    // 2. The backend would update the env.ts file
-    // 3. The frontend would be reloaded to apply changes
+    if (!response.ok) {
+      throw new Error(`Failed to update config: ${response.status} ${response.statusText}`);
+    }
     
-    // Simulate a successful update with a short delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    return { 
-      success: true,
-      message: "Konfiguration erfolgreich gespeichert" 
-    };
+    return await response.json();
   } catch (error) {
     console.error('Error updating configuration:', error);
     throw error;
