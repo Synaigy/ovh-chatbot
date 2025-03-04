@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, User, Send, ArrowDown, Database, AlertTriangle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,8 @@ import {
   getSessionCounter, 
   resetSessionCounter, 
   getDailyMessageLimit, 
-  checkMessageLimit 
+  checkMessageLimit,
+  getConfig
 } from '@/services/aiService';
 import { useToast } from "@/hooks/use-toast";
 import CodeBlock from './CodeBlock';
