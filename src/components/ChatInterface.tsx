@@ -1,353 +1,250 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, AlertCircle, DatabaseOff } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { Bot, User, Send, ArrowDown, Database } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import MessageItem from './MessageItem';
-import { sendMessage, isClientInitialized } from '@/services/aiService';
-import { useToast } from '@/components/ui/use-toast';
-import { Progress } from '@/components/ui/progress';
+import { sendMessage, incrementCounter, getCounter } from '@/services/aiService';
+import { useToast } from "@/hooks/use-toast";
+import CodeBlock from './CodeBlock';
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
-
-const QUESTIONS_LIMIT = 50;
-
-const ChatInterface: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+const ChatInterface = () => {
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [currentAssistantMessage, setCurrentAssistantMessage] = useState('');
-  const [questionCount, setQuestionCount] = useState<number>(() => {
-    const savedCount = sessionStorage.getItem('questionCount');
-    return savedCount ? parseInt(savedCount, 10) : 0;
-  });
-  const [configLoaded, setConfigLoaded] = useState<boolean>(isClientInitialized());
+  const [messageCount, setMessageCount] = useState(0);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
-  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   
   useEffect(() => {
-    if (shouldAutoScroll) {
-      scrollToBottom();
-    }
-  }, [messages, shouldAutoScroll]);
-  
-  useEffect(() => {
-    sessionStorage.setItem('questionCount', questionCount.toString());
-  }, [questionCount]);
-  
-  // Check if client is initialized
-  useEffect(() => {
-    const checkConfig = () => {
-      const isInitialized = isClientInitialized();
-      setConfigLoaded(isInitialized);
+    const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
     
-    // Check immediately on mount
-    checkConfig();
+    scrollToBottom();
+  }, [messages]);
+  
+  useEffect(() => {
+    const handleScroll = () => {
+      if (messagesEndRef.current) {
+        const chatWindow = messagesEndRef.current.parentElement;
+        if (chatWindow) {
+          const isAtBottom = chatWindow.scrollHeight - chatWindow.scrollTop === chatWindow.clientHeight;
+          setShowScrollButton(!isAtBottom);
+        }
+      }
+    };
     
-    // Set interval to check periodically
-    const intervalId = setInterval(checkConfig, 15000);
+    const chatWindow = messagesEndRef.current?.parentElement;
+    chatWindow?.addEventListener('scroll', handleScroll);
     
-    return () => clearInterval(intervalId);
+    return () => {
+      chatWindow?.removeEventListener('scroll', handleScroll);
+    };
   }, []);
   
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    const loadCounter = async () => {
+      try {
+        const initialCount = await getCounter();
+        setMessageCount(initialCount);
+      } catch (error) {
+        console.error('Error loading counter:', error);
+      }
+    };
+    
+    loadCounter();
+  }, []);
+  
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
+    // Don't allow empty submissions
     if (!input.trim()) return;
     
-    // Check if configuration is loaded
-    if (!configLoaded) {
-      toast({
-        title: "Konfigurationsfehler",
-        description: "Die Konfiguration konnte nicht geladen werden. Bitte wenden Sie sich an den Administrator.",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Add user message to the chat
+    const userMessage = { role: 'user', content: input };
+    setMessages([...messages, userMessage]);
     
-    // Check if question limit reached
-    if (questionCount >= QUESTIONS_LIMIT) {
-      toast({
-        title: "Limit erreicht",
-        description: "Voucher aufgebraucht, Versuch es morgen nochmal",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    const userMessage = { role: 'user' as const, content: input };
-    setMessages((prev) => [...prev, userMessage]);
+    // Clear input and reset rows
     setInput('');
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+    
+    // Set loading state
     setIsLoading(true);
-    setCurrentAssistantMessage('');
-    setShouldAutoScroll(true); // Enable auto-scroll when user sends message
-    
-    // Increment question counter
-    setQuestionCount(prev => prev + 1);
-    
-    // Add loading message bubble
-    const loadingMessage = { role: 'assistant' as const, content: '...' };
-    setMessages((prev) => [...prev, loadingMessage]);
     
     try {
-      const allMessages = [...messages, userMessage];
-      const stream = await sendMessage(allMessages);
+      // Increment message counter
+      const count = await incrementCounter();
+      setMessageCount(count);
       
-      // Remove the loading message and initialize a real assistant message
-      setMessages((prev) => {
-        const updated = [...prev];
-        // Remove the last message (which is the loading message)
-        updated.pop();
-        return updated;
-      });
+      // Format messages for the API
+      const apiMessages = [...messages, userMessage].map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
       
-      // Initialize assistant message
-      const assistantMessage = { role: 'assistant' as const, content: '' };
-      setMessages((prev) => [...prev, assistantMessage]);
-
+      // Send to API with streaming
+      const streamingResponse = await sendMessage(apiMessages);
+      
+      // Create a new assistant message
+      const assistantMessage = { role: 'assistant', content: '' };
+      setMessages([...messages, userMessage, assistantMessage]);
+      
+      // Handle the streaming response
       let fullContent = '';
       
-      // Only scroll automatically for the first chunk
-      let isFirstChunk = true;
-      
-      for await (const chunk of stream) {
-        const content = chunk.choices?.[0]?.delta?.content || '';
-        fullContent += content;
-        
-        setCurrentAssistantMessage(fullContent);
-        setMessages((prev) => {
-          const updated = [...prev];
-          updated[updated.length - 1] = { 
-            ...updated[updated.length - 1], 
-            content: fullContent 
-          };
-          return updated;
-        });
-        
-        if (isFirstChunk) {
-          // Only scroll to bottom for the first chunk
-          scrollToBottom();
-          isFirstChunk = false;
-          // Disable auto-scrolling after first chunk
-          setShouldAutoScroll(false);
+      for await (const chunk of streamingResponse) {
+        if (chunk.choices[0]?.delta?.content) {
+          fullContent += chunk.choices[0].delta.content;
+          setMessages(prevMessages => {
+            const updatedMessages = [...prevMessages];
+            updatedMessages[updatedMessages.length - 1].content = fullContent;
+            return updatedMessages;
+          });
         }
       }
       
-      // Enable auto-scroll again when the complete response is received
-      setShouldAutoScroll(true);
-      setTimeout(scrollToBottom, 100);
-    } catch (error: any) {
+      // Auto-scroll to bottom
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+      
+    } catch (error) {
       console.error('Error sending message:', error);
       
-      // Remove the loading message
-      setMessages((prev) => {
-        const updated = [...prev];
-        // Remove the last message (which is the loading message)
-        updated.pop();
-        return updated;
-      });
-      
-      // Create detailed error message
-      let errorMessage = "Bei der Kommunikation mit der AI ist ein Fehler aufgetreten.";
-      if (error) {
-        // Extract as much information as possible from the error object
-        if (error.message) {
-          errorMessage += ` Fehler: ${error.message}`;
-        }
-        if (error.status) {
-          errorMessage += ` (Status: ${error.status})`;
-        }
-        
-        // Additional error details
-        if (error.type) {
-          errorMessage += ` Typ: ${error.type}`;
-        }
-        
-        // Check for error response details
-        if (error.response?.data?.message) {
-          errorMessage += ` Details: ${error.response.data.message}`;
-        }
-        
-        // If there's a headers with more information
-        if (error.headers) {
-          try {
-            const headerInfo = JSON.stringify(error.headers);
-            if (headerInfo && headerInfo !== '{}') {
-              errorMessage += ` Header-Info: ${headerInfo.substring(0, 100)}`;
-            }
-          } catch (e) {
-            // Ignore stringify errors
-          }
-        }
-      }
-      
+      // Show error toast
       toast({
         title: "Fehler",
-        description: errorMessage,
-        variant: "destructive"
+        description: error instanceof Error 
+          ? `Die Nachricht konnte nicht gesendet werden: ${error.message}` 
+          : "Die Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.",
+        variant: "destructive",
       });
+      
     } finally {
       setIsLoading(false);
-      // Enable auto-scroll when request completes
-      setShouldAutoScroll(true);
-      setTimeout(scrollToBottom, 100);
     }
   };
-
-  const handleKeySubmit = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
-    }
-  };
-
-  const questionsRemaining = QUESTIONS_LIMIT - questionCount;
-  const progressPercentage = (questionCount / QUESTIONS_LIMIT) * 100;
-
+  
+  // Display configuration error state
+  const [configError, setConfigError] = useState(false);
+  
+  // Check for any messages and configuration status
+  const isEmpty = messages.length === 0;
+  const hasError = configError === true; // Fixed this line
+  
   return (
-    <div className="w-full max-w-4xl mx-auto relative">
-      <div className="flex flex-col h-full">
-        {/* Configuration Error Banner */}
-        {!configLoaded && (
-          <div className="mb-4 p-4 bg-red-500/20 rounded-lg flex items-center gap-3">
-            <DatabaseOff className="w-6 h-6 text-red-400" />
-            <div>
-              <h3 className="font-medium text-red-400">Konfigurationsfehler</h3>
-              <p className="text-white/70">Die Konfiguration konnte nicht von der Datenbank geladen werden. Bitte wenden Sie sich an den Administrator.</p>
-            </div>
-          </div>
-        )}
-      
-        <div className="chat-window-height overflow-y-auto p-4 glass-morphism rounded-t-xl scrollbar-thin">
-          {/* Show error message when limit is reached */}
-          {questionsRemaining <= 0 && (
-            <div className="mb-4 p-3 bg-red-500/20 rounded-lg text-center">
-              <AlertCircle className="w-5 h-5 mx-auto mb-2" />
-              <p className="text-red-400 font-medium">Voucher aufgebraucht, Versuch es morgen nochmal</p>
-            </div>
-          )}
-          
-          {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center p-6 animate-fade-in">
-              <h3 className="text-xl font-semibold mb-4 highlight-text animate-pulse-subtle">
-                Willkommen beim OVHcloud Chatbot mit DeepSeek-R1
-              </h3>
-              <p className="text-white/70 max-w-lg mb-6">
-                Stellen Sie Ihre Fragen an DeepSeek R1, ein fortschrittliches Reasoning-LLM für logisches Denken, Problemlösung und präzise Antworten.
-              </p>
-              <div className="glass-morphism p-4 rounded-lg max-w-md text-white/60 text-sm">
-                <p className="mb-2">Beispielfragen:</p>
-                <ul className="space-y-2 text-left">
-                  <li className="hover:text-white cursor-pointer transition-colors" onClick={() => setInput("Wie kann ich das OVHcloud AI Endpoint in meine Anwendung integrieren?")}>
-                    → Wie kann ich das OVHcloud AI Endpoint in meine Anwendung integrieren?
-                  </li>
-                  <li className="hover:text-white cursor-pointer transition-colors" onClick={() => setInput("Erkläre die Unterschiede zwischen verschiedenen KI-Modellen.")}>
-                    → Erkläre die Unterschiede zwischen verschiedenen KI-Modellen.
-                  </li>
-                  <li className="hover:text-white cursor-pointer transition-colors" onClick={() => setInput("Schreibe mir ein Python-Skript zur Automatisierung von Dateioperationen.")}>
-                    → Schreibe mir ein Python-Skript zur Automatisierung von Dateioperationen.
-                  </li>
-                </ul>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-2 pb-2">
-              {messages.map((message, index) => (
-                <MessageItem 
-                  key={index} 
-                  message={message} 
-                  isLast={index === messages.length - 1}
-                />
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          )}
-        </div>
-        
-        <form 
-          onSubmit={handleSubmit} 
-          className="glass-morphism p-4 rounded-b-xl flex items-end gap-2 border-t border-white/5"
-        >
-          <Textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeySubmit}
-            placeholder={!configLoaded ? "Konfigurationsfehler: Bitte wenden Sie sich an den Administrator" :
-              questionCount >= QUESTIONS_LIMIT 
-                ? "Voucher aufgebraucht, Versuch es morgen nochmal" 
-                : "Ihre Nachricht hier eingeben..."}
-            className="flex-1 min-h-[60px] max-h-[200px] resize-none overflow-y-auto glass-morphism text-white bg-transparent"
-            style={{
-              WebkitAppearance: "none",
-              appearance: "none",
-              caretColor: "white",
-              borderColor: "rgba(255, 255, 255, 0.1)",
-            }}
-            disabled={isLoading || questionCount >= QUESTIONS_LIMIT || !configLoaded}
-          />
-          <Button 
-            type="submit" 
-            disabled={isLoading || !input.trim() || questionCount >= QUESTIONS_LIMIT || !configLoaded}
-            className={cn(
-              "h-10 rounded-full hover:highlight-glow",
-              input.trim() && questionCount < QUESTIONS_LIMIT && configLoaded 
-                ? "bg-highlight hover:bg-highlight/80" 
-                : "bg-white/10 hover:bg-white/20",
-              "flex items-center justify-center",
-              isLoading && "animate-pulse opacity-70",
-              (questionCount >= QUESTIONS_LIMIT || !configLoaded) && "cursor-not-allowed"
-            )}
-          >
-            <Send className="w-5 h-5" />
-          </Button>
-        </form>
-        
-        {/* Question Counter - Moved below chat interface */}
-        <div className="mt-2 glass-morphism p-3 rounded-lg">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-sm text-white/70">Verbleibende Fragen:</span>
-            <span className={cn(
-              "font-medium",
-              questionsRemaining <= 10 ? "text-red-400" : "text-white"
-            )}>
-              {questionsRemaining} / {QUESTIONS_LIMIT}
-            </span>
-          </div>
-          <Progress 
-            value={progressPercentage} 
-            className={cn(
-              "h-2",
-              progressPercentage > 80 ? "bg-red-500/20" :
-              progressPercentage > 60 ? "bg-orange-500/20" :
-              "bg-green-500/20"
-            )}
-          />
-        </div>
-        
-        {questionCount >= QUESTIONS_LIMIT && (
-          <div className="mt-2 glass-morphism p-3 rounded-lg flex items-center gap-2 text-red-400">
-            <AlertCircle size={16} />
-            <span className="text-sm">Voucher aufgebraucht, Versuch es morgen nochmal</span>
+    <div className="rounded-xl overflow-hidden glass-morphism border-white/10 flex flex-col h-[600px] md:h-[700px]">
+      {/* Messages Container */}
+      <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
+        {isEmpty && !hasError && (
+          <div className="h-full flex flex-col items-center justify-center text-center p-6">
+            <Bot className="h-12 w-12 text-white/20 mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Wie kann ich helfen?</h3>
+            <p className="text-white/70 mb-4">
+              Ich bin hier, um Ihre Fragen zu beantworten. <br />
+              Stellen Sie mir eine Frage, um zu beginnen!
+            </p>
           </div>
         )}
         
-        {!configLoaded && (
-          <div className="mt-2 glass-morphism p-3 rounded-lg flex items-center gap-2 text-red-400">
-            <DatabaseOff size={16} />
-            <span className="text-sm">Konfigurationsfehler: Bitte wenden Sie sich an den Administrator</span>
+        {hasError && (
+          <div className="h-full flex flex-col items-center justify-center text-center p-6">
+            <Database className="h-12 w-12 text-red-500 mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Konfigurationsfehler</h3>
+            <p className="text-white/70 mb-4">
+              Die Konfiguration konnte nicht von der Datenbank geladen werden. 
+              Bitte wenden Sie sich an den Administrator.
+            </p>
+          </div>
+        )}
+        
+        {/* Message list */}
+        {!isEmpty && (
+          <div className="space-y-4">
+            {messages.map((message, index) => (
+              <MessageItem 
+                key={index}
+                role={message.role} 
+                content={message.content}
+                isLoading={index === messages.length - 1 && isLoading}
+              />
+            ))}
+            <div ref={messagesEndRef} />
           </div>
         )}
       </div>
+      
+      {/* Input Area */}
+      <form onSubmit={handleSubmit} className="border-t border-white/10 p-4">
+        <div className="flex items-start space-x-2">
+          <Textarea
+            ref={textareaRef}
+            value={input}
+            onChange={(e) => {
+              setInput(e.target.value);
+              
+              // Auto-grow textarea (but limit to 5 rows)
+              e.target.style.height = 'auto';
+              const newHeight = Math.min(e.target.scrollHeight, 5 * 24); // 24px line height
+              e.target.style.height = `${newHeight}px`;
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!isLoading && input.trim()) {
+                  handleSubmit(e as any);
+                }
+              }
+            }}
+            placeholder="Ich bin hier, um Ihre Fragen zu beantworten..."
+            className="flex-1 bg-white/5 border-white/10 placeholder:text-white/50 resize-none"
+            disabled={isLoading || hasError}
+            rows={1}
+          />
+          <Button 
+            type="submit" 
+            size="icon"
+            disabled={isLoading || !input.trim() || hasError}
+            className={`rounded-full h-10 w-10 p-2 ${isLoading ? 'bg-white/5' : 'bg-accent'}`}
+          >
+            {isLoading ? (
+              <div className="animate-spin h-4 w-4 border-2 border-white/50 border-t-white rounded-full" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+        
+        {/* Message Counter */}
+        {messageCount > 0 && (
+          <div className="mt-2 text-xs text-white/50 text-right">
+            Nachrichten: {messageCount}
+          </div>
+        )}
+      </form>
+      
+      {/* Scroll to Bottom Button */}
+      {showScrollButton && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute bottom-20 right-8 rounded-full bg-black/50 hover:bg-black/70"
+          onClick={() => {
+            if (messagesEndRef.current) {
+              messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+            }
+          }}
+        >
+          <ArrowDown className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 };
