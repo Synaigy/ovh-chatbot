@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, User, Send, ArrowDown, Database, AlertTriangle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -49,11 +48,10 @@ const ChatInterface = () => {
   }, []);
   
   useEffect(() => {
-    const scrollToBottom = () => {
+    // Only scroll to bottom when new messages are added, not on every render
+    if (messages.length > 0) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    };
-    
-    scrollToBottom();
+    }
   }, [messages]);
   
   useEffect(() => {
@@ -175,6 +173,16 @@ const ChatInterface = () => {
     textareaRef.current?.focus();
   };
   
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault(); // Prevent default to avoid unexpected scrolling
+      if (!isLoading && input.trim() && !configError && !limitReached) {
+        const form = e.currentTarget.form;
+        if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      }
+    }
+  };
+  
   return (
     <div className="rounded-xl overflow-hidden glass-morphism border-white/10 flex flex-col h-[600px] md:h-[700px]">
       <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
@@ -251,14 +259,7 @@ const ChatInterface = () => {
               const newHeight = Math.min(e.target.scrollHeight, 5 * 24);
               e.target.style.height = `${newHeight}px`;
             }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                if (!isLoading && input.trim() && !configError && !limitReached) {
-                  handleSubmit(e as any);
-                }
-              }
-            }}
+            onKeyDown={handleKeyDown}
             placeholder={
               limitReached 
                 ? "Tageslimit erreicht. Bitte versuchen Sie es morgen wieder." 
@@ -300,7 +301,8 @@ const ChatInterface = () => {
           variant="ghost"
           size="icon"
           className="absolute bottom-20 right-8 rounded-full bg-black/50 hover:bg-black/70"
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault(); // Prevent scrolling issues
             if (messagesEndRef.current) {
               messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
             }
