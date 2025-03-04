@@ -246,7 +246,13 @@ const ChatInterface: React.FC = () => {
             placeholder={questionCount >= QUESTIONS_LIMIT 
               ? "Voucher aufgebraucht, Versuch es morgen nochmal" 
               : "Ihre Nachricht hier eingeben..."}
-            className="flex-1 min-h-[60px] max-h-[200px] resize-none overflow-y-auto glass-morphism"
+            className="flex-1 min-h-[60px] max-h-[200px] resize-none overflow-y-auto glass-morphism text-white bg-transparent"
+            style={{
+              WebkitAppearance: "none",
+              appearance: "none",
+              caretColor: "white",
+              borderColor: "rgba(255, 255, 255, 0.1)",
+            }}
             disabled={isLoading || questionCount >= QUESTIONS_LIMIT}
           />
           <Button 
