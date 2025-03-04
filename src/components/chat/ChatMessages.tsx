@@ -45,15 +45,28 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   // Handle new messages - only auto-scroll if user hasn't manually scrolled up
   useEffect(() => {
     if (messages.length > 0 && !userScrolled) {
-      scrollToBottom();
+      // Store the current scroll position before scrolling
+      const { scrollTop } = containerRef.current || { scrollTop: 0 };
+      
+      // Use setTimeout to ensure DOM has updated
+      setTimeout(() => {
+        scrollToBottom();
+        
+        // Restore scroll position if this was a user message being sent
+        if (messages.length > 0 && messages[messages.length - 1].role === 'user') {
+          if (containerRef.current) {
+            containerRef.current.scrollTop = scrollTop;
+          }
+        }
+      }, 10);
     }
   }, [messages, userScrolled]);
   
   // Reset userScrolled when a new message is added by the user
   useEffect(() => {
     if (messages.length > 0 && messages[messages.length - 1].role === 'user') {
+      // Don't force scroll here, just mark that we've seen a user message
       setUserScrolled(false);
-      scrollToBottom();
     }
   }, [messages.length]);
   
@@ -119,7 +132,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   }
   
   return (
-    <div ref={containerRef} className="h-full overflow-y-auto scrollbar-thin">
+    <div ref={containerRef} className="h-full overflow-y-auto scrollbar-thin" style={{ position: 'relative' }}>
       <div className="space-y-4">
         {messages.map((message, index) => (
           <MessageItem 

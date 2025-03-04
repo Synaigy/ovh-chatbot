@@ -43,7 +43,20 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // Prevent form submission from reloading the page
     e.stopPropagation(); // Stop event propagation
+    
+    // Save current scroll position
+    const scrollPosition = window.scrollY;
+    
+    // Submit the form
     handleSubmit(e);
+    
+    // Restore scroll position
+    setTimeout(() => {
+      window.scrollTo({
+        top: scrollPosition,
+        behavior: 'auto'
+      });
+    }, 0);
   };
   
   return (

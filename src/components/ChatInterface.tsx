@@ -22,7 +22,7 @@ const ChatInterface = () => {
   const isEmpty = messages.length === 0;
   
   return (
-    <div className="rounded-xl overflow-hidden glass-morphism border-white/10 flex flex-col h-[600px] md:h-[700px]">
+    <div className="rounded-xl overflow-hidden border-white/10 flex flex-col h-[600px] md:h-[700px]">
       <div className="flex-1 overflow-hidden p-4">
         <ConfigError show={configError} />
         
