@@ -116,7 +116,10 @@ const Footer = ({ configError = false }: FooterProps) => {
     <footer className="w-full bg-black/30 border-t border-white/10 mt-16 py-8">
       <div className="container mx-auto px-4 md:px-6">
         <div className="mb-6 text-center">
-          <p className="text-white text-xl font-medium">Deine Cloud Services: Nur einen Klick entfernt</p>
+          <p className="text-xl font-medium">
+            <span className="text-white">Deine Cloud Services:</span>{" "}
+            <span className="highlight-text">Nur einen Klick entfernt</span>
+          </p>
         </div>
         
         <div className="flex flex-col md:flex-row justify-between items-center">
