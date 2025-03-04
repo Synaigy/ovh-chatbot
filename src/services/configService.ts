@@ -21,25 +21,30 @@ let currentFooterConfig = {
   }
 };
 
-// Keep track of the last fetch time to prevent constant reloading
+// Detection state
+let isConfigDetectionRunning = false;
 let lastFetchTime = 0;
-const MIN_FETCH_INTERVAL = 60000; // 1 minute minimum between forced refreshes
-
-// Track if initialization is complete
+const MIN_FETCH_INTERVAL = 300000; // 5 minutes minimum between forced refreshes
 let isInitialized = false;
-
-// Track if a page reload is pending
 let reloadPending = false;
+let initialConfigLoaded = false;
 
 // Function to load configuration from the database
 export const loadConfiguration = async () => {
   try {
     // If we're in the midst of a reload cycle, don't fetch again
     if (reloadPending) {
+      console.log('Skipping loadConfiguration - reload already pending');
       return null;
     }
     
     const config = await getConfig();
+    
+    // Skip if config is incomplete
+    if (!config || !config.API_ENDPOINT || !config.API_KEY) {
+      console.log('Skipping loadConfiguration - incomplete config data');
+      return null;
+    }
     
     // Update stored API configuration
     currentApiConfig = {
@@ -63,6 +68,7 @@ export const loadConfiguration = async () => {
     
     // Mark as initialized
     isInitialized = true;
+    initialConfigLoaded = true;
     
     return {
       api: currentApiConfig,
@@ -116,9 +122,26 @@ export const saveConfiguration = async (newConfig) => {
   }
 };
 
+// Hash function to create a unique identifier for config state
+const hashConfig = (config) => {
+  return Object.entries(config)
+    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+    .map(([key, value]) => `${key}:${value}`)
+    .join('|');
+};
+
+// Store config hash after initialization to prevent false detection
+let initialConfigHash = '';
+
 // Function to check if configuration has changed and reload if necessary
 export const detectConfigChanges = async () => {
-  // If a reload is already pending, don't check again
+  // Skip if detection is already running
+  if (isConfigDetectionRunning) {
+    console.log('Skipping config check - detection already running');
+    return false;
+  }
+  
+  // Skip if a reload is already pending
   if (reloadPending) {
     console.log('Skipping config check - reload already pending');
     return false;
@@ -132,7 +155,10 @@ export const detectConfigChanges = async () => {
   }
   
   try {
-    // Update last fetch time FIRST to prevent concurrent calls
+    // Set detection running flag
+    isConfigDetectionRunning = true;
+    
+    // Update last fetch time
     lastFetchTime = now;
     
     console.log('Checking for configuration changes...');
@@ -143,12 +169,14 @@ export const detectConfigChanges = async () => {
     // Skip if config is empty or incomplete
     if (!newConfig || !newConfig.API_ENDPOINT || !newConfig.API_KEY) {
       console.log('Skipping config update - incomplete config data');
+      isConfigDetectionRunning = false;
       return false;
     }
     
-    // If this is the first time loading config, just store it without reloading
-    if (!isInitialized) {
+    // If this is the first successful config load, just store it without comparing
+    if (!initialConfigLoaded) {
       console.log('First-time configuration loaded - storing without reload');
+      
       currentApiConfig = {
         ENDPOINT: newConfig.API_ENDPOINT,
         API_KEY: newConfig.API_KEY
@@ -167,79 +195,88 @@ export const detectConfigChanges = async () => {
         }
       };
       
+      // Create initial hash to compare future changes against
+      initialConfigHash = hashConfig({
+        API_ENDPOINT: newConfig.API_ENDPOINT,
+        API_KEY: newConfig.API_KEY,
+        CONTACT_NAME: newConfig.CONTACT_NAME,
+        CONTACT_TITLE: newConfig.CONTACT_TITLE,
+        CONTACT_PHOTO: newConfig.CONTACT_PHOTO,
+        CONTACT_MEETING: newConfig.CONTACT_MEETING,
+        CONTACT_LINKEDIN: newConfig.CONTACT_LINKEDIN,
+        COMPANY_NAME: newConfig.COMPANY_NAME
+      });
+      
+      initialConfigLoaded = true;
       isInitialized = true;
+      isConfigDetectionRunning = false;
       return false;
     }
     
-    // Check if API configuration has changed
-    const apiConfigChanged = 
-      currentApiConfig.ENDPOINT !== newConfig.API_ENDPOINT ||
-      currentApiConfig.API_KEY !== newConfig.API_KEY;
+    // Create current config hash
+    const newConfigHash = hashConfig({
+      API_ENDPOINT: newConfig.API_ENDPOINT,
+      API_KEY: newConfig.API_KEY,
+      CONTACT_NAME: newConfig.CONTACT_NAME,
+      CONTACT_TITLE: newConfig.CONTACT_TITLE,
+      CONTACT_PHOTO: newConfig.CONTACT_PHOTO,
+      CONTACT_MEETING: newConfig.CONTACT_MEETING,
+      CONTACT_LINKEDIN: newConfig.CONTACT_LINKEDIN,
+      COMPANY_NAME: newConfig.COMPANY_NAME
+    });
     
-    // Check if footer configuration has changed
-    const footerConfigChanged = 
-      currentFooterConfig.CONTACT_PERSON.NAME !== newConfig.CONTACT_NAME ||
-      currentFooterConfig.CONTACT_PERSON.TITLE !== newConfig.CONTACT_TITLE ||
-      currentFooterConfig.CONTACT_PERSON.PHOTO_URL !== newConfig.CONTACT_PHOTO ||
-      currentFooterConfig.CONTACT_PERSON.MEETING_URL !== newConfig.CONTACT_MEETING ||
-      currentFooterConfig.CONTACT_PERSON.LINKEDIN_URL !== newConfig.CONTACT_LINKEDIN ||
-      currentFooterConfig.COMPANY.NAME !== newConfig.COMPANY_NAME;
-    
-    // If any configuration has changed, reload once
-    if (apiConfigChanged || footerConfigChanged) {
+    // Compare hashes instead of individual fields
+    if (initialConfigHash !== newConfigHash) {
+      console.log('Configuration hash changed - reload needed');
+      
       // Set reload pending flag to prevent multiple reloads
       reloadPending = true;
       
-      // Show an appropriate toast message
-      if (apiConfigChanged) {
-        toast({
-          title: "Konfiguration aktualisiert",
-          description: "Die API-Konfiguration wurde geändert. Die Änderungen werden jetzt wirksam.",
-          variant: "default",
-        });
-        
-        // Update stored API configuration
-        currentApiConfig = {
-          ENDPOINT: newConfig.API_ENDPOINT,
-          API_KEY: newConfig.API_KEY
-        };
-      }
+      // Only show toast once and with a single message
+      toast({
+        title: "Konfiguration aktualisiert",
+        description: "Die Konfiguration wurde geändert. Die Anwendung wird aktualisiert.",
+        variant: "default",
+      });
       
-      if (footerConfigChanged) {
-        toast({
-          title: "Konfiguration aktualisiert",
-          description: "Die Kontakt- und Firmeninformationen wurden geändert. Die Änderungen werden jetzt wirksam.",
-          variant: "default",
-        });
-        
-        // Update stored footer configuration
-        currentFooterConfig = {
-          CONTACT_PERSON: {
-            NAME: newConfig.CONTACT_NAME || '',
-            TITLE: newConfig.CONTACT_TITLE || '',
-            PHOTO_URL: newConfig.CONTACT_PHOTO || '',
-            MEETING_URL: newConfig.CONTACT_MEETING || '',
-            LINKEDIN_URL: newConfig.CONTACT_LINKEDIN || ''
-          },
-          COMPANY: {
-            NAME: newConfig.COMPANY_NAME || ''
-          }
-        };
-      }
+      // Update stored configurations silently
+      currentApiConfig = {
+        ENDPOINT: newConfig.API_ENDPOINT,
+        API_KEY: newConfig.API_KEY
+      };
       
-      // Use a timeout to prevent immediate reload (which can cause loops)
-      console.log('Configuration changed - scheduling page reload');
+      currentFooterConfig = {
+        CONTACT_PERSON: {
+          NAME: newConfig.CONTACT_NAME || '',
+          TITLE: newConfig.CONTACT_TITLE || '',
+          PHOTO_URL: newConfig.CONTACT_PHOTO || '',
+          MEETING_URL: newConfig.CONTACT_MEETING || '',
+          LINKEDIN_URL: newConfig.CONTACT_LINKEDIN || ''
+        },
+        COMPANY: {
+          NAME: newConfig.COMPANY_NAME || ''
+        }
+      };
+      
+      // Update the hash
+      initialConfigHash = newConfigHash;
+      
+      // Use a longer timeout to prevent rapid reloads
+      console.log('Scheduling page reload in 3 seconds');
       setTimeout(() => {
         window.location.reload();
-      }, 1500); // Give time for toast to be seen
+      }, 3000);
       
+      isConfigDetectionRunning = false;
       return true;
     }
     
-    console.log('No configuration changes detected');
+    console.log('No configuration changes detected (hashes match)');
+    isConfigDetectionRunning = false;
     return false;
   } catch (error) {
     console.error('Error detecting configuration changes:', error);
+    isConfigDetectionRunning = false;
     return false;
   }
 };
@@ -248,13 +285,13 @@ export const detectConfigChanges = async () => {
 export const initializeConfigDetection = () => {
   console.log('Initializing config detection');
   
-  // Initial load of configuration, but only if not already initialized
-  if (!isInitialized) {
+  // Initial load of configuration
+  if (!initialConfigLoaded) {
     console.log('First time initializing - loading configuration');
     detectConfigChanges();
   }
   
-  // Set up event listener for when user returns to the tab
+  // Set up event listener for when user returns to the tab (focus)
   const focusHandler = () => {
     console.log('Window focus detected - checking for config changes');
     detectConfigChanges();
