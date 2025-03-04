@@ -62,18 +62,18 @@ const db = new sqlite3.Database(DB_PATH, (err) => {
   }
 });
 
-// Initialize default configuration values
+// Initialize default configuration values with empty strings
 const initializeDefaultConfig = () => {
   const defaultConfig = {
-    'API_ENDPOINT': 'https://deepseek-r1-distill-llama-70b.endpoints.kepler.ai.cloud.ovh.net/api/openai_compat/v1',
-    'API_KEY': 'eyJhbGciOiJFZERTQSJ9.eyJwcm9qZWN0IjoiMDM3YTQ4YzhhNTU4NDExMmI4ZmFiZDM1ZGE4YTk4N2EiLCJhdWQiOiIzNzM4NjExNjY0MDQzMDM0IiwiZXhwIjoxNzcyNTI1NDQ3LCJqdGkiOiIzYjcyNTc3MC0wMWEyLTRiYmYtYTUxOS1kZTVhZmZjYjI4OWQiLCJpc3MiOiJ0cmFpbmluZy5haS5jbG91ZC5vdmgubmV0Iiwic3ViIjoidnMyMjc3MDMtb3ZoIiwib3ZoVG9rZW4iOiIzeGlxb3Z2RmNyaTMtTU1pd2dxa1U3TklDdXZtV0Y2dW5yWE5xeG9Ra0E2RE9lUDNiQ1dsX045T19MYnA0ZDdwN1pPa19GQTdZMk9iZjBxc2plZ2lxRXV3c1dTNWFLM25RMU5jaVJnNHNqdS1BYzMwQy1nLWFOcE4zaDdfZTk0a2tjSGxoaWFEeE1fUUp6WEVIY0dicHhZaHNXNURpa3NOczhOZkljYld4aE5HTVNhNmhQZXBPcnlOb05xNzhZUWFFQWhHMElNaC00Vm1lME52UUhXNWRGR3h6bGV2eWJ2NmlibHFIVGVRR2RmRHJ2NENiaFhUSEIyTkZKeXZ3c21IaG9lMFM3Z3VwSTQ5MV93am5IckpGSVlPQkpiVFU1WVJ6N19HMEtkNko1M0tfYWg0amRaREN3NGt3aXBuMkU3cy13V1NoektLcE1scG5vS2tZTzYwZHFDT3l2S2RjOU1HcUNRTl9OWUxUWFM5YWdxYXpMSzZGYzdrcWVYMWEwbEJDLWVvNGFEb085eG9wWkJwdzRiMFdtc2VCaXRNaTlqa1dBV2RZU2JzT1NjLTd4MFVTY1pxb1AyVUtabk9CTnY1cDVkM1RIVjNnM3RNMnU5enJRMzFzN1lmNmNPUXdlcTludjdDUDFUY0RqcXVrSUZCemthY3FmWFFmSEtGWE9Gajd1ZW1WV0RuSWFwNElhRks5bE10SEwwVV9McWowZHlXUFJtYjlZWm5LLWZVWWI1Unh0R3hGTlhyLVRHLWlkdUtnMnVaSU1QTy0zMUVfS2VnSmU5WG5OSUhqaG9SaGt2a182aFRHemlhVTg4STNkRzdabWhrZkh4Y2QtNHYwMWsxZmlfaWhTb1paUFRDeFVZTmtPRWlNR0QxTUliUlE3X2dPWl9wTC1DOWI3cDdueEo3S3RuUEdBZlZJS0hhREFXWmtoNlE4VmM2UFFqa0J5SEFLM3JLMHllcXgxNEdnZUxUT3RCZDIya0RXZ1NjeFc4QXlKdk1FSlFneW5tSjlmX1J4NzcwUTRwaENXU3hTanFpQXBFajNQZFNUZVM1WHU3bndLZFZsd3ZSakpocU95cl9HNEl2Z1NfUTBZTE5sejQ5ZXFaU2dXcVdOOUo2WDVqeG5EODdyOXZISGc3YkNuY2xSRUdqVS04dUtsUkZ2akliczNWU3NHNi1yTW5zU2VBR2l2TEM3SlJUNzNGNDQ1b05lcEo2cHdKY3lHWGJWSzFoVWxJZ3phT19VeFluVC1CMW05eXY4NmR6Ti1JeXlaYVkwSl9QWHlOTjJJdV94MHhvZHg1dFR4ZVU5WDVDM29NemZDQWRUaG1KYmh0bSJ9.uzey-28dSX6ZsWJcUFw7Y9Cal1LtlXT0ttrE0ScxHdPs5LOxQYXgs9AK1M-EUkgizraZXT2ToBRYInPiSB30Dg',
-    'ADMIN_PASSWORD': 'synaigy!2024#',
-    'CONTACT_NAME': 'Marc Achsnich',
-    'CONTACT_TITLE': 'Head of Cloud',
-    'CONTACT_PHOTO': 'https://profile-images.xing.com/images/0bac708fee0a79e6e7186a5fb08af312-26/marc-achsnich.1024x1024.jpg',
-    'CONTACT_MEETING': 'https://meetings.hubspot.com/frank-hoerning/expertengesprach?uuid=e99278b4-1943-4661-ab4e-9d07a49536cf',
-    'CONTACT_LINKEDIN': 'https://www.linkedin.com/in/achsnich/',
-    'COMPANY_NAME': 'Synaigy GmbH'
+    'API_ENDPOINT': '',
+    'API_KEY': '',
+    'ADMIN_PASSWORD': '',
+    'CONTACT_NAME': '',
+    'CONTACT_TITLE': '',
+    'CONTACT_PHOTO': '',
+    'CONTACT_MEETING': '',
+    'CONTACT_LINKEDIN': '',
+    'COMPANY_NAME': ''
   };
   
   Object.entries(defaultConfig).forEach(([key, value]) => {
@@ -85,7 +85,7 @@ const initializeDefaultConfig = () => {
           if (err) {
             console.error(`Error inserting default config for ${key}:`, err);
           } else {
-            console.log(`Default configuration for ${key} initialized`);
+            console.log(`Default configuration for ${key} initialized with empty value`);
           }
         });
       }
