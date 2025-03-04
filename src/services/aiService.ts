@@ -42,13 +42,22 @@ export const getCounter = async () => {
 
 export const updateConfig = async (newConfig: any) => {
   try {
-    // In a real application, this would be a server-side API call
+    // In a real application, this would be a server-side API call to update env.ts
     // For this demo, we're simulating a successful update
     console.log('Configuration updated:', newConfig);
     
-    // In a production environment, this would update the actual env.ts file
-    // Here we'll just return success and the updated config would be applied on restart
-    return { success: true };
+    // In a production environment, we would:
+    // 1. Send the new config to a backend endpoint
+    // 2. The backend would update the env.ts file
+    // 3. The frontend would be reloaded to apply changes
+    
+    // Simulate a successful update with a short delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    return { 
+      success: true,
+      message: "Konfiguration erfolgreich gespeichert" 
+    };
   } catch (error) {
     console.error('Error updating configuration:', error);
     throw error;
