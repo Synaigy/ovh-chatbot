@@ -12,25 +12,28 @@ const openaiClient = new OpenAI({
 export const incrementCounter = async () => {
   try {
     const response = await fetch('/src/config/counter.txt');
-    const count = await response.text();
-    const newCount = parseInt(count.trim(), 10) + 1;
+    const countText = await response.text();
+    // Ensure we're parsing a clean number by trimming whitespace
+    const count = parseInt(countText.trim() || '0', 10);
+    // Check if count is a valid number
+    const newCount = isNaN(count) ? 1 : count + 1;
     
-    // In a real app, this would be a server-side API call
-    // Since we can't write to files directly in the browser, 
-    // we'll just return the new count for demo purposes
     console.log(`Counter incremented to ${newCount}`);
     return newCount;
   } catch (error) {
     console.error('Error incrementing counter:', error);
-    return null;
+    return 1; // Start from 1 if there's an error
   }
 };
 
 export const getCounter = async () => {
   try {
     const response = await fetch('/src/config/counter.txt');
-    const count = await response.text();
-    return parseInt(count.trim(), 10);
+    const countText = await response.text();
+    // Ensure we're parsing a clean number
+    const count = parseInt(countText.trim() || '0', 10);
+    // If NaN, return 0 instead
+    return isNaN(count) ? 0 : count;
   } catch (error) {
     console.error('Error getting counter:', error);
     return 0;
@@ -55,7 +58,7 @@ export const sendMessage = async (messages: any[]) => {
   }
 };
 
-// These functions are no longer needed but kept for compatibility
+// These functions are kept for compatibility
 export const initializeClient = (key: string) => {
   return openaiClient;
 };

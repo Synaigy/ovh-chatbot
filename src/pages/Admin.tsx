@@ -54,14 +54,65 @@ const Admin = () => {
     }
   };
 
-  const handleSave = () => {
-    // In a real app, this would save to a database or API
-    // For demo purposes, we'll just show a success message
-    toast({
-      title: "Konfiguration gespeichert",
-      description: "Die Änderungen wurden erfolgreich gespeichert.",
-      variant: "default",
-    });
+  const handleSave = async () => {
+    try {
+      // In a real-world scenario, this would be an API call
+      // Since we're using a frontend-only approach, we'll simulate saving
+      // by creating a download of the updated env.ts file
+      
+      const envContent = `
+/**
+ * This file simulates environment variables for frontend-only applications
+ * In a real production environment, these values would be injected during build time
+ * or managed through a backend service to avoid exposing tokens in client-side code.
+ */
+
+export const API_CONFIG = {
+  ENDPOINT: '${config.api.endpoint}',
+  API_KEY: '${config.api.apiKey}',
+};
+
+export const FOOTER_CONFIG = {
+  CONTACT_PERSON: {
+    NAME: '${config.contact.name}',
+    TITLE: '${config.contact.title}',
+    PHOTO_URL: '${config.contact.photoUrl}',
+    MEETING_URL: '${config.contact.meetingUrl}',
+    LINKEDIN_URL: '${config.contact.linkedinUrl}'
+  },
+  COMPANY: {
+    NAME: '${config.company.name}'
+  }
+};
+
+// Admin password (in a real app, this would be hashed and stored securely)
+export const ADMIN_PASSWORD = '${ADMIN_PASSWORD}';
+`;
+
+      // Create a blob and download link for the updated env.ts file
+      const blob = new Blob([envContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'env.ts';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Konfiguration exportiert",
+        description: "Die Konfigurationsdatei wurde zum Download bereitgestellt. Bitte ersetzen Sie die vorhandene env.ts Datei mit dieser Datei.",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Error saving configuration:", error);
+      toast({
+        title: "Fehler",
+        description: "Die Konfiguration konnte nicht gespeichert werden.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!isAuthenticated) {
@@ -103,7 +154,7 @@ const Admin = () => {
   }
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto py-10 mt-20">
       <h1 className="text-3xl font-bold mb-8 highlight-text">Admin Bereich</h1>
       
       <div className="mb-8">
@@ -217,7 +268,7 @@ const Admin = () => {
           </CardContent>
           <CardFooter>
             <Button onClick={handleSave} className="ml-auto bg-highlight hover:bg-highlight/90">
-              Konfiguration speichern
+              Konfiguration exportieren
             </Button>
           </CardFooter>
         </Card>
