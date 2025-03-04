@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -27,10 +26,13 @@ const ChatInterface: React.FC = () => {
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (shouldAutoScroll) {
+      scrollToBottom();
+    }
+  }, [messages, shouldAutoScroll]);
   
   useEffect(() => {
     sessionStorage.setItem('questionCount', questionCount.toString());
@@ -60,6 +62,7 @@ const ChatInterface: React.FC = () => {
     setInput('');
     setIsLoading(true);
     setCurrentAssistantMessage('');
+    setShouldAutoScroll(true); // Enable auto-scroll when user sends message
     
     // Increment question counter
     setQuestionCount(prev => prev + 1);
@@ -86,6 +89,9 @@ const ChatInterface: React.FC = () => {
 
       let fullContent = '';
       
+      // Only scroll automatically for the first chunk
+      let isFirstChunk = true;
+      
       for await (const chunk of stream) {
         const content = chunk.choices?.[0]?.delta?.content || '';
         fullContent += content;
@@ -99,7 +105,19 @@ const ChatInterface: React.FC = () => {
           };
           return updated;
         });
+        
+        if (isFirstChunk) {
+          // Only scroll to bottom for the first chunk
+          scrollToBottom();
+          isFirstChunk = false;
+          // Disable auto-scrolling after first chunk
+          setShouldAutoScroll(false);
+        }
       }
+      
+      // Enable auto-scroll again when the complete response is received
+      setShouldAutoScroll(true);
+      setTimeout(scrollToBottom, 100);
     } catch (error: any) {
       console.error('Error sending message:', error);
       
@@ -152,6 +170,9 @@ const ChatInterface: React.FC = () => {
       });
     } finally {
       setIsLoading(false);
+      // Enable auto-scroll when request completes
+      setShouldAutoScroll(true);
+      setTimeout(scrollToBottom, 100);
     }
   };
 
