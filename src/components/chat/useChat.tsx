@@ -60,7 +60,7 @@ export const useChat = () => {
   }, []);
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent form submission from causing page reload
     
     if (!input.trim() || configError || limitReached) return;
     

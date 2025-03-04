@@ -32,13 +32,23 @@ const ChatInput: React.FC<ChatInputProps> = ({
       e.preventDefault(); // Prevent default to avoid unexpected scrolling
       if (!isLoading && input.trim() && !hasError && !limitReached) {
         const form = e.currentTarget.form;
-        if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        if (form) {
+          e.stopPropagation(); // Stop event propagation
+          const submitEvent = new Event('submit', { cancelable: true, bubbles: true });
+          handleSubmit(submitEvent as unknown as React.FormEvent<HTMLFormElement>);
+        }
       }
     }
   };
   
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault(); // Prevent form submission from reloading the page
+    e.stopPropagation(); // Stop event propagation
+    handleSubmit(e);
+  };
+  
   return (
-    <form onSubmit={handleSubmit} className="border-t border-white/10 p-4">
+    <form onSubmit={onSubmit} className="border-t border-white/10 p-4">
       <div className="flex items-start space-x-2">
         <Textarea
           ref={textareaRef}
