@@ -2,6 +2,7 @@
 import React from 'react';
 import Footer from '@/components/Footer';
 import CodeBlock from '@/components/CodeBlock';
+import Banner from '@/components/Banner';
 
 const Tutorial = () => {
   const installCode = `npm install openai`;
@@ -116,6 +117,7 @@ export default AIChat;`;
 
   return (
     <div className="min-h-screen w-full flex flex-col">
+      <Banner />
       <main className="flex-1 container mx-auto px-4 py-20 md:py-24">
         <section className="mb-16 max-w-4xl mx-auto animate-fade-up">
           <h1 className="text-3xl md:text-4xl font-bold mb-8 highlight-text">
