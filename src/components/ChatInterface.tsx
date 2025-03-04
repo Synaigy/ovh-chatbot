@@ -24,7 +24,6 @@ const ChatInterface = () => {
   const [configError, setConfigError] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
   const messageLimit = getDailyMessageLimit();
@@ -56,25 +55,24 @@ const ChatInterface = () => {
     
     scrollToBottom();
     
-    // Ensure chat container always has overflow-y auto
-    if (chatContainerRef.current) {
-      chatContainerRef.current.style.overflowY = 'auto';
+    const chatContainer = messagesEndRef.current?.parentElement;
+    if (chatContainer) {
+      chatContainer.style.overflowY = 'auto';
     }
   }, [messages]);
   
   useEffect(() => {
     const handleScroll = () => {
-      if (chatContainerRef.current && messagesEndRef.current) {
-        const isAtBottom = 
-          chatContainerRef.current.scrollHeight - 
-          chatContainerRef.current.scrollTop <= 
-          chatContainerRef.current.clientHeight + 50; // Adding a small buffer
-        
-        setShowScrollButton(!isAtBottom);
+      if (messagesEndRef.current) {
+        const chatWindow = messagesEndRef.current.parentElement;
+        if (chatWindow) {
+          const isAtBottom = chatWindow.scrollHeight - chatWindow.scrollTop === chatWindow.clientHeight;
+          setShowScrollButton(!isAtBottom);
+        }
       }
     };
     
-    const chatWindow = chatContainerRef.current;
+    const chatWindow = messagesEndRef.current?.parentElement;
     chatWindow?.addEventListener('scroll', handleScroll);
     
     return () => {
@@ -116,9 +114,9 @@ const ChatInterface = () => {
     
     setIsLoading(true);
     
-    // Ensure chat container always has overflow-y auto
-    if (chatContainerRef.current) {
-      chatContainerRef.current.style.overflowY = 'auto';
+    const chatContainer = messagesEndRef.current?.parentElement;
+    if (chatContainer) {
+      chatContainer.style.overflowY = 'auto';
     }
     
     try {
@@ -147,14 +145,12 @@ const ChatInterface = () => {
             return updatedMessages;
           });
           
-          // Ensure scroll to bottom happens smoothly during streaming
           if (messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
           }
         }
       }
       
-      // Final scroll to bottom after all chunks are processed
       setTimeout(() => {
         if (messagesEndRef.current) {
           messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -182,9 +178,9 @@ const ChatInterface = () => {
     } finally {
       setIsLoading(false);
       
-      // Ensure chat container always has overflow-y auto, even after errors
-      if (chatContainerRef.current) {
-        chatContainerRef.current.style.overflowY = 'auto';
+      const chatContainer = messagesEndRef.current?.parentElement;
+      if (chatContainer) {
+        chatContainer.style.overflowY = 'auto';
       }
     }
   };
@@ -204,17 +200,9 @@ const ChatInterface = () => {
     textareaRef.current?.focus();
   };
   
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    setShowScrollButton(false);
-  };
-  
   return (
     <div className="rounded-xl overflow-hidden glass-morphism border-white/10 flex flex-col h-[600px] md:h-[700px]">
-      <div 
-        ref={chatContainerRef}
-        className="flex-1 overflow-y-auto p-4 scrollbar-thin" 
-      >
+      <div className="flex-1 overflow-y-auto p-4 scrollbar-thin" style={{ overflowY: 'auto' }}>
         {isEmpty && !hasError && !limitReached && (
           <div className="h-full flex flex-col items-center justify-center text-center p-6">
             <Bot className="h-12 w-12 text-white/20 mb-4" />
@@ -337,7 +325,11 @@ const ChatInterface = () => {
           variant="ghost"
           size="icon"
           className="absolute bottom-20 right-8 rounded-full bg-black/50 hover:bg-black/70"
-          onClick={scrollToBottom}
+          onClick={() => {
+            if (messagesEndRef.current) {
+              messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+            }
+          }}
         >
           <ArrowDown className="h-4 w-4" />
         </Button>
