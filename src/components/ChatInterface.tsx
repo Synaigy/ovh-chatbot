@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import CodeBlock from './CodeBlock';
 
 const ChatInterface = () => {
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
@@ -65,7 +65,7 @@ const ChatInterface = () => {
     if (!input.trim()) return;
     
     // Add user message to the chat
-    const userMessage = { role: 'user', content: input };
+    const userMessage = { role: 'user' as const, content: input };
     setMessages([...messages, userMessage]);
     
     // Clear input and reset rows
@@ -92,7 +92,7 @@ const ChatInterface = () => {
       const streamingResponse = await sendMessage(apiMessages);
       
       // Create a new assistant message
-      const assistantMessage = { role: 'assistant', content: '' };
+      const assistantMessage = { role: 'assistant' as const, content: '' };
       setMessages([...messages, userMessage, assistantMessage]);
       
       // Handle the streaming response
