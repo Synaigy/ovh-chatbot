@@ -55,9 +55,9 @@ const initializeOpenAIClient = (config: any) => {
 
 export const incrementCounter = async () => {
   try {
-    // Call the backend API to increment the counter
+    // Call the backend API to increment the counter using GET instead of POST
     const response = await fetch(`${API_URL}/counter/increment`, {
-      method: 'POST',
+      method: 'GET',
       headers: {
         'Content-Type': 'text/plain'
       }
