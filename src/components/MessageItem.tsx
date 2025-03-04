@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { User, Bot } from 'lucide-react';
+import { User, Bot, MessageSquare } from 'lucide-react';
 import CodeBlock from './CodeBlock';
 
 interface MessageItemProps {
@@ -113,10 +113,16 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isLast = false, isLo
           isLoading ? 'animate-pulse' : ''
         )}>
           {isLoading ? (
-            <div className="flex items-center space-x-1">
-              <span className="inline-block w-2 h-2 bg-[#FF3366] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-              <span className="inline-block w-2 h-2 bg-[#FF3366] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-              <span className="inline-block w-2 h-2 bg-[#FF3366] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+            <div className="flex items-center">
+              <div className="mr-2 relative">
+                <Bot className="w-5 h-5 text-[#FF3366]" />
+                <MessageSquare className="w-3 h-3 absolute -top-1 -right-1 text-[#FF3366]" />
+              </div>
+              <div className="text-[#FF3366] font-medium">
+                <span className="inline-block animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
+                <span className="inline-block animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
+                <span className="inline-block animate-bounce" style={{ animationDelay: '300ms' }}>.</span>
+              </div>
             </div>
           ) : (
             contentParts.map((part, index) => (
