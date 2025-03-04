@@ -1,4 +1,3 @@
-
 import { toast } from '@/components/ui/use-toast';
 import { getConfig, updateConfig } from './aiService';
 
@@ -20,6 +19,10 @@ let currentFooterConfig = {
     NAME: ''
   }
 };
+
+// Keep track of the last fetch time to prevent constant reloading
+let lastFetchTime = 0;
+const MIN_FETCH_INTERVAL = 60000; // 1 minute minimum between forced refreshes
 
 // Function to load configuration from the database
 export const loadConfiguration = async () => {
@@ -86,6 +89,9 @@ export const saveConfiguration = async (newConfig) => {
       currentApiConfig = newConfig.api;
       currentFooterConfig = newConfig.footer;
       
+      // Reset the fetch time to prevent immediate reload
+      lastFetchTime = Date.now();
+      
       return true;
     }
     return false;
@@ -98,7 +104,21 @@ export const saveConfiguration = async (newConfig) => {
 // Function to check if configuration has changed and reload if necessary
 export const detectConfigChanges = async () => {
   try {
+    // Don't check too frequently to avoid deadloops
+    const now = Date.now();
+    if (now - lastFetchTime < MIN_FETCH_INTERVAL) {
+      return false;
+    }
+    
+    lastFetchTime = now;
+    
+    // Only fetch the config from the server
     const newConfig = await getConfig();
+    
+    // Skip if config is empty or incomplete
+    if (!newConfig || !newConfig.API_ENDPOINT || !newConfig.API_KEY) {
+      return false;
+    }
     
     // Check if API configuration has changed
     if (
@@ -161,6 +181,21 @@ export const detectConfigChanges = async () => {
     console.error('Error detecting configuration changes:', error);
     return false;
   }
+};
+
+// Now we also need to fix how this is called in App.tsx
+export const initializeConfigDetection = () => {
+  // Initial check for configuration
+  detectConfigChanges();
+  
+  // Set up event listeners with proper debouncing
+  window.addEventListener('focus', () => {
+    detectConfigChanges();
+  });
+  
+  return () => {
+    window.removeEventListener('focus', detectConfigChanges);
+  };
 };
 
 // Export getter functions for configuration

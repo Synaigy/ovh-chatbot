@@ -10,7 +10,7 @@ import Tutorial from "./pages/Tutorial";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 import Navbar from "./components/Navbar";
-import { detectConfigChanges } from "./services/configService";
+import { initializeConfigDetection } from "./services/configService";
 
 const queryClient = new QueryClient();
 
@@ -19,15 +19,10 @@ const ConfigChangeDetector = () => {
   const location = useLocation();
   
   useEffect(() => {
-    // Check for config changes when returning to the app
-    window.addEventListener('focus', detectConfigChanges);
+    // Initialize config detection with proper timing
+    const cleanup = initializeConfigDetection();
     
-    // Also detect changes when navigating routes
-    detectConfigChanges();
-    
-    return () => {
-      window.removeEventListener('focus', detectConfigChanges);
-    };
+    return cleanup;
   }, [location.pathname]);
   
   return null;
