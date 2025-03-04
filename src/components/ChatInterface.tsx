@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, User, Send, ArrowDown, Database, AlertTriangle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -109,8 +108,6 @@ const ChatInterface = () => {
     
     setIsLoading(true);
     
-    // Remove the scroll locking that was happening here
-    
     try {
       const apiMessages = [...messages, userMessage].map(msg => ({
         role: msg.role,
@@ -136,19 +133,8 @@ const ChatInterface = () => {
             updatedMessages[updatedMessages.length - 1].content = fullContent;
             return updatedMessages;
           });
-          
-          // Allow scrolling by not forcing overflowY in the parent element
-          if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-          }
         }
       }
-      
-      setTimeout(() => {
-        if (messagesEndRef.current) {
-          messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
       
     } catch (error) {
       console.error('Error sending message:', error);
@@ -170,8 +156,6 @@ const ChatInterface = () => {
       }
     } finally {
       setIsLoading(false);
-      
-      // Remove the scroll locking that was happening here as well
     }
   };
   
