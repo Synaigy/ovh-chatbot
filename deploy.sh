@@ -10,12 +10,8 @@ echo "Starting deployment process..."
 echo "Building React application..."
 npm run build
 
-# Create a dist directory if it doesn't exist
-mkdir -p dist
-
-# Move build files to dist directory
-echo "Moving build files to dist directory..."
-cp -r build/* dist/
+# The build is already in the dist directory with Vite, no need to create or copy
+echo "Build complete. Files are in the dist directory."
 
 # Start the server.js in the background
 echo "Starting Node.js server..."
