@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Linkedin } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getFooterConfig } from '@/services/configService';
+import { getConfig } from '@/services/aiService';
 
 const Footer = () => {
   const [config, setConfig] = useState({
@@ -19,9 +19,30 @@ const Footer = () => {
   });
   
   useEffect(() => {
-    // Load configuration from the database
-    const footerConfig = getFooterConfig();
-    setConfig(footerConfig);
+    // Load configuration directly from the API
+    const loadConfig = async () => {
+      try {
+        const dbConfig = await getConfig();
+        if (dbConfig) {
+          setConfig({
+            CONTACT_PERSON: {
+              NAME: dbConfig.CONTACT_NAME || '',
+              TITLE: dbConfig.CONTACT_TITLE || '',
+              PHOTO_URL: dbConfig.CONTACT_PHOTO || '',
+              MEETING_URL: dbConfig.CONTACT_MEETING || '',
+              LINKEDIN_URL: dbConfig.CONTACT_LINKEDIN || ''
+            },
+            COMPANY: {
+              NAME: dbConfig.COMPANY_NAME || ''
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error loading footer configuration:', error);
+      }
+    };
+    
+    loadConfig();
   }, []);
   
   const { CONTACT_PERSON, COMPANY } = config;

@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Index from "./pages/Index";
 import Tutorial from "./pages/Tutorial";
@@ -11,7 +11,7 @@ import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import { loadConfiguration } from "./services/configService";
+import { getConfig } from "./services/aiService";
 
 const queryClient = new QueryClient();
 
@@ -24,7 +24,7 @@ const ConfigHandler = () => {
     const loadConfig = async () => {
       if (!configLoaded) {
         try {
-          const config = await loadConfiguration();
+          const config = await getConfig();
           if (config) {
             setConfigLoaded(true);
             console.log('Initial configuration loaded via ConfigHandler');
