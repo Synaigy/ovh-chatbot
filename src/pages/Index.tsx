@@ -1,9 +1,10 @@
+
 import React, { useEffect, useState } from 'react';
 import ChatInterface from '@/components/ChatInterface';
 import Banner from '@/components/Banner';
 import CodeBlock from '@/components/CodeBlock';
 import TutorialBanner from '@/components/TutorialBanner';
-import { GitHubLogoIcon } from '@radix-ui/react-icons';
+import { Github } from 'lucide-react'; // Changed from GitHubLogoIcon to Github from lucide-react
 import { getConfig } from '@/services/aiService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -216,7 +217,7 @@ export default AIChat;`;
             
             <div className="bg-black/20 rounded-lg p-4 border border-white/10">
               <div className="flex items-center mb-2">
-                <GitHubLogoIcon className="w-5 h-5 mr-2" />
+                <Github className="w-5 h-5 mr-2" /> {/* Changed from GitHubLogoIcon to Github */}
                 <h3 className="text-lg font-medium">Open Source Initiative</h3>
               </div>
               <p className="text-white/80 text-sm">
@@ -231,7 +232,7 @@ export default AIChat;`;
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-3 py-1 text-sm bg-white/10 hover:bg-white/20 rounded-full transition-colors"
                 >
-                  <GitHubLogoIcon className="w-4 h-4 mr-1" />
+                  <Github className="w-4 h-4 mr-1" /> {/* Changed from GitHubLogoIcon to Github */}
                   GitHub Repository ansehen
                 </a>
               </div>
@@ -307,3 +308,4 @@ export default AIChat;`;
 };
 
 export default Index;
+
