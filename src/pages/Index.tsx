@@ -1,8 +1,8 @@
-
 import React from 'react';
 import ChatInterface from '@/components/ChatInterface';
 import Banner from '@/components/Banner';
 import CodeBlock from '@/components/CodeBlock';
+import TutorialBanner from '@/components/TutorialBanner';
 import { GitHubLogoIcon } from '@radix-ui/react-icons';
 
 const Index = () => {
@@ -158,6 +158,9 @@ export default AIChat;`;
         <section className="animate-fade-up mb-16" style={{ animationDelay: "0.3s" }}>
           <ChatInterface />
         </section>
+
+        {/* Tutorial Banner to separate the demo from the tutorial */}
+        <TutorialBanner />
 
         {/* Tutorial Content moved from Tutorial.tsx */}
         <section className="mb-16 max-w-4xl mx-auto animate-fade-up" style={{ animationDelay: "0.4s" }}>
