@@ -9,29 +9,28 @@ const openaiClient = new OpenAI({
   dangerouslyAllowBrowser: true // Only for demo purposes
 });
 
+// Backend API URL for the counter
+const COUNTER_API_URL = 'http://localhost:3001/api';
+
 export const incrementCounter = async () => {
   try {
-    // Fetch the current counter value
-    const response = await fetch('/src/config/counter.txt');
-    const countText = await response.text();
-    // Ensure we're parsing a clean number by trimming whitespace
-    const count = parseInt(countText.trim() || '0', 10);
-    // Check if count is a valid number
-    const newCount = isNaN(count) ? 1 : count + 1;
-    
-    // Write the new counter value to the file
-    // In a real application, this would be an API call to update a database
-    // For demonstration purposes, we'll just update the counter in memory
-    await fetch('/src/config/counter.txt', {
+    // Call the backend API to increment the counter
+    const response = await fetch(`${COUNTER_API_URL}/counter/increment`, {
       method: 'POST',
-      body: newCount.toString(),
       headers: {
         'Content-Type': 'text/plain'
       }
     });
     
-    console.log(`Counter incremented to ${newCount}`);
-    return newCount;
+    if (!response.ok) {
+      throw new Error(`Failed to increment counter: ${response.status} ${response.statusText}`);
+    }
+    
+    const newCount = await response.text();
+    const countValue = parseInt(newCount, 10);
+    
+    console.log(`Counter incremented to ${countValue}`);
+    return countValue;
   } catch (error) {
     console.error('Error incrementing counter:', error);
     return 1; // Start from 1 if there's an error
@@ -40,11 +39,16 @@ export const incrementCounter = async () => {
 
 export const getCounter = async () => {
   try {
-    // Add cache-busting parameter to avoid browser caching
-    const response = await fetch(`/src/config/counter.txt?_t=${Date.now()}`);
+    // Call the backend API to get the counter value
+    const response = await fetch(`${COUNTER_API_URL}/counter`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get counter: ${response.status} ${response.statusText}`);
+    }
+    
     const countText = await response.text();
-    // Ensure we're parsing a clean number
     const count = parseInt(countText.trim() || '0', 10);
+    
     // If NaN, return 0 instead
     return isNaN(count) ? 0 : count;
   } catch (error) {
