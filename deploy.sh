@@ -6,6 +6,10 @@ set -e
 
 echo "Starting deployment process..."
 
+# Pull latest changes from git repository
+echo "Pulling latest changes from git repository..."
+git pull
+
 # Stop any existing server
 echo "Checking for running server process..."
 if [ -f server.pid ]; then
