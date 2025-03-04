@@ -58,21 +58,19 @@ const openai = new OpenAI({
 });`;
 
   const usageCode = `// Nachricht an das Modell senden
-async function chatWithAI(userMessage) {
+export const chatWithAI = async (messages: any[]) => {
   try {
-    const response = await openai.chat.completions.create({
-      model: 'deepseek-r1-distill-llama-70b',
-      messages: [
-        { role: 'system', content: 'Du bist ein hilfreicher Assistent.' },
-        { role: 'user', content: userMessage }
-      ],
-      temperature: 0.7,
-      max_tokens: 1000,
+  
+    
+    const response = await openaiClient.chat.completions.create({
+      model: 'DeepSeek-R1-Distill-Llama-70B',
+      stream: true,
+      messages,
     });
 
-    return response.choices[0].message.content;
+    return response;
   } catch (error) {
-    console.error('Fehler bei der API-Anfrage:', error);
+    console.error('Error sending message to AI:', error);
     throw error;
   }
 }
@@ -83,40 +81,6 @@ chatWithAI('Erkläre die Vorteile von KI in einfachen Worten.')
   .catch(error => console.error(error));`;
 
   const reactComponentCode = `import React, { useState } from 'react';
-import OpenAI from 'openai';
-
-// OpenAI-Client (normalerweise in einem separaten Service)
-const openai = new OpenAI({
-  apiKey: process.env.REACT_APP_OVH_API_KEY,
-  baseURL: 'https://deepseek-r1-distill-llama-70b.endpoints.kepler.ai.cloud.ovh.net/api/openai_compat/v',
-  dangerouslyAllowBrowser: true
-});
-
-const AIChat = () => {
-  const [prompt, setPrompt] = useState('');
-  const [response, setResponse] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!prompt.trim()) return;
-
-    setIsLoading(true);
-    try {
-      const result = await openai.chat.completions.create({
-        model: 'deepseek-r1-distill-llama-70b',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-      });
-
-      setResponse(result.choices[0].message.content);
-    } catch (error) {
-      console.error('Fehler:', error);
-      setResponse('Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="p-4">
