@@ -11,12 +11,24 @@ const openaiClient = new OpenAI({
 
 export const incrementCounter = async () => {
   try {
+    // Fetch the current counter value
     const response = await fetch('/src/config/counter.txt');
     const countText = await response.text();
     // Ensure we're parsing a clean number by trimming whitespace
     const count = parseInt(countText.trim() || '0', 10);
     // Check if count is a valid number
     const newCount = isNaN(count) ? 1 : count + 1;
+    
+    // Write the new counter value to the file
+    // In a real application, this would be an API call to update a database
+    // For demonstration purposes, we'll just update the counter in memory
+    await fetch('/src/config/counter.txt', {
+      method: 'POST',
+      body: newCount.toString(),
+      headers: {
+        'Content-Type': 'text/plain'
+      }
+    });
     
     console.log(`Counter incremented to ${newCount}`);
     return newCount;
@@ -28,7 +40,8 @@ export const incrementCounter = async () => {
 
 export const getCounter = async () => {
   try {
-    const response = await fetch('/src/config/counter.txt');
+    // Add cache-busting parameter to avoid browser caching
+    const response = await fetch(`/src/config/counter.txt?_t=${Date.now()}`);
     const countText = await response.text();
     // Ensure we're parsing a clean number
     const count = parseInt(countText.trim() || '0', 10);

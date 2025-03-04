@@ -42,6 +42,19 @@ const Admin = () => {
     };
     
     loadCounter();
+    
+    let intervalId: number | undefined;
+    if (isAuthenticated) {
+      intervalId = window.setInterval(() => {
+        loadCounter();
+      }, 30000);
+    }
+    
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
   }, [isAuthenticated]);
 
   const handleLogin = (e: React.FormEvent) => {
