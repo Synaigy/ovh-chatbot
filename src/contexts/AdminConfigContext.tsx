@@ -144,7 +144,14 @@ export const AdminConfigProvider = ({ children }: { children: ReactNode }) => {
         // Force a config refresh after saving
         const updatedConfig = await loadConfiguration();
         if (updatedConfig) {
-          setConfig(updatedConfig);
+          // Correctly map database config format to our local ConfigState format
+          setConfig({
+            api: {
+              endpoint: updatedConfig.api.ENDPOINT,
+              apiKey: updatedConfig.api.API_KEY
+            },
+            footer: updatedConfig.footer
+          });
         }
       } else {
         throw new Error("Failed to save configuration");
