@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, User, Send, ArrowDown, Database, AlertTriangle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -28,10 +27,8 @@ const ChatInterface = () => {
   const { toast } = useToast();
   const messageLimit = getDailyMessageLimit();
   
-  // Modify this section to use the session counter
   const [messageCount, setMessageCount] = useState(getSessionCounter());
   
-  // Check configuration on load
   useEffect(() => {
     const checkConfig = async () => {
       try {
@@ -56,6 +53,11 @@ const ChatInterface = () => {
     };
     
     scrollToBottom();
+    
+    const chatContainer = messagesEndRef.current?.parentElement;
+    if (chatContainer) {
+      chatContainer.style.overflowY = 'auto';
+    }
   }, [messages]);
   
   useEffect(() => {
@@ -77,18 +79,14 @@ const ChatInterface = () => {
     };
   }, []);
   
-  // Reset session counter on component mount
   useEffect(() => {
-    // Reset session counter when component mounts
     resetSessionCounter();
     setMessageCount(0);
   }, []);
   
-  // Replace loadCounterAndCheckLimit function
   useEffect(() => {
     const loadCounterAndCheckLimit = async () => {
       try {
-        // Check if limit reached based on session counter
         const { limitReached: limitStatus } = await checkMessageLimit();
         setMessageCount(getSessionCounter());
         setLimitReached(limitStatus);
@@ -103,42 +101,38 @@ const ChatInterface = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    // Don't allow empty submissions
     if (!input.trim() || configError || limitReached) return;
     
-    // Add user message to the chat
     const userMessage = { role: 'user' as const, content: input };
     setMessages([...messages, userMessage]);
     
-    // Clear input and reset rows
     setInput('');
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
     
-    // Set loading state
     setIsLoading(true);
     
+    const chatContainer = messagesEndRef.current?.parentElement;
+    if (chatContainer) {
+      chatContainer.style.overflowY = 'auto';
+    }
+    
     try {
-      // Format messages for the API
       const apiMessages = [...messages, userMessage].map(msg => ({
         role: msg.role,
         content: msg.content
       }));
       
-      // Send to API with streaming
       const streamingResponse = await sendMessage(apiMessages);
       
-      // Create a new assistant message with empty content to show the loading animation
       const assistantMessage = { role: 'assistant' as const, content: '' };
       setMessages(prev => [...prev, assistantMessage]);
       
-      // Update session message count and check limit after successful send
       setMessageCount(getSessionCounter());
       const { limitReached: newLimitStatus } = await checkMessageLimit();
       setLimitReached(newLimitStatus);
       
-      // Handle the streaming response
       let fullContent = '';
       
       for await (const chunk of streamingResponse) {
@@ -149,10 +143,13 @@ const ChatInterface = () => {
             updatedMessages[updatedMessages.length - 1].content = fullContent;
             return updatedMessages;
           });
+          
+          if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+          }
         }
       }
       
-      // Auto-scroll to bottom
       setTimeout(() => {
         if (messagesEndRef.current) {
           messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -162,12 +159,10 @@ const ChatInterface = () => {
     } catch (error) {
       console.error('Error sending message:', error);
       
-      // Check if it's a limit error
       if (error instanceof Error && error.message.includes('Tägliches Nachrichtenlimit')) {
         setLimitReached(true);
       }
       
-      // Show error toast
       toast({
         title: "Fehler",
         description: error instanceof Error 
@@ -176,20 +171,22 @@ const ChatInterface = () => {
         variant: "destructive",
       });
       
-      // Check if it's a configuration error
       if (error instanceof Error && error.message.includes('Konfiguration')) {
         setConfigError(true);
       }
-      
     } finally {
       setIsLoading(false);
+      
+      const chatContainer = messagesEndRef.current?.parentElement;
+      if (chatContainer) {
+        chatContainer.style.overflowY = 'auto';
+      }
     }
   };
   
   const isEmpty = messages.length === 0;
   const hasError = configError === true;
   
-  // Example questions to show when the chat is empty
   const exampleQuestions = [
     "Was ist ein Reasoning-LLM?",
     "Wie ist deepseek-r1-distill-llama-70b aufgebaut?",
@@ -199,15 +196,12 @@ const ChatInterface = () => {
   
   const handleExampleClick = (question: string) => {
     setInput(question);
-    // Auto-focus the textarea
     textareaRef.current?.focus();
   };
   
-  // Message Counter display - clarify that this is the session counter
   return (
     <div className="rounded-xl overflow-hidden glass-morphism border-white/10 flex flex-col h-[600px] md:h-[700px]">
-      {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
+      <div className="flex-1 overflow-y-auto p-4 scrollbar-thin" style={{ overflowY: 'auto' }}>
         {isEmpty && !hasError && !limitReached && (
           <div className="h-full flex flex-col items-center justify-center text-center p-6">
             <Bot className="h-12 w-12 text-white/20 mb-4" />
@@ -217,7 +211,6 @@ const ChatInterface = () => {
               Stellen Sie mir eine Frage, um zu beginnen!
             </p>
             
-            {/* Example questions */}
             <div className="w-full max-w-md space-y-2">
               <p className="text-sm text-white/50 mb-2">Beispielfragen:</p>
               {exampleQuestions.map((question, index) => (
@@ -255,7 +248,6 @@ const ChatInterface = () => {
           </div>
         )}
         
-        {/* Message list */}
         {!isEmpty && (
           <div className="space-y-4">
             {messages.map((message, index) => (
@@ -271,7 +263,6 @@ const ChatInterface = () => {
         )}
       </div>
       
-      {/* Input Area */}
       <form onSubmit={handleSubmit} className="border-t border-white/10 p-4">
         <div className="flex items-start space-x-2">
           <Textarea
@@ -280,9 +271,8 @@ const ChatInterface = () => {
             onChange={(e) => {
               setInput(e.target.value);
               
-              // Auto-grow textarea (but limit to 5 rows)
               e.target.style.height = 'auto';
-              const newHeight = Math.min(e.target.scrollHeight, 5 * 24); // 24px line height
+              const newHeight = Math.min(e.target.scrollHeight, 5 * 24);
               e.target.style.height = `${newHeight}px`;
             }}
             onKeyDown={(e) => {
@@ -318,7 +308,6 @@ const ChatInterface = () => {
           </Button>
         </div>
         
-        {/* Session Message Counter - updated text */}
         <div className="mt-2 text-xs text-white/50 text-right flex justify-end items-center">
           {limitReached && (
             <span className="mr-2 text-amber-400 flex items-center">
@@ -330,7 +319,6 @@ const ChatInterface = () => {
         </div>
       </form>
       
-      {/* Scroll to Bottom Button */}
       {showScrollButton && (
         <Button
           variant="ghost"
