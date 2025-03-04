@@ -3,11 +3,14 @@ import React from 'react';
 
 const Banner = () => {
   return (
-    <div className="w-full py-12 md:py-16 bg-gradient-to-r from-red-900 via-red-800 to-red-700 shadow-lg">
-      <div className="container mx-auto px-4">
-        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-center leading-tight text-white">
-          OVHcloud AI Endpoints: <span className="highlight-text block md:inline">Ein Deepdive der synaigy</span>
+    <div className="w-full py-24 md:py-32 bg-gradient-to-r from-black via-gray-900 to-red-900 shadow-lg">
+      <div className="container mx-auto px-8">
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-left leading-tight text-white">
+          OVHcloud AI Endpoints
         </h1>
+        <p className="text-2xl md:text-3xl lg:text-4xl font-medium text-left mt-2 text-white opacity-90">
+          Ein Deepdive der synaigy
+        </p>
       </div>
     </div>
   );
