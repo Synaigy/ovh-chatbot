@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -22,7 +21,6 @@ const Navbar = () => {
 
   const navItems = [
     { name: 'Home', path: '/' },
-    { name: 'Tutorial', path: '/tutorial' },
     { 
       name: 'AI Endpoint', 
       path: 'https://endpoints.ai.cloud.ovh.net',

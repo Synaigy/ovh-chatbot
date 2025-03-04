@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Index from "./pages/Index";
-import Tutorial from "./pages/Tutorial";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 import Navbar from "./components/Navbar";
@@ -22,11 +20,9 @@ const ConfigHandler = () => {
   const [configError, setConfigError] = useState(false);
   
   useEffect(() => {
-    // Load configuration only once on initial load
     const loadConfig = async () => {
       if (!configLoaded) {
         try {
-          // Force a fresh config fetch on startup
           const refreshSuccess = await forceConfigRefresh();
           
           if (refreshSuccess) {
@@ -43,7 +39,6 @@ const ConfigHandler = () => {
               variant: "destructive",
             });
             
-            // Still mark as loaded to prevent loops
             setConfigLoaded(true);
           }
         } catch (error) {
@@ -56,7 +51,6 @@ const ConfigHandler = () => {
             variant: "destructive",
           });
           
-          // Still mark as loaded to prevent loops
           setConfigLoaded(true);
         }
       }
@@ -64,7 +58,6 @@ const ConfigHandler = () => {
     
     loadConfig();
     
-    // Set up periodic refresh of configuration
     const refreshInterval = setInterval(() => {
       forceConfigRefresh().then((success) => {
         if (success) {
@@ -91,7 +84,7 @@ const ConfigHandler = () => {
         console.error('Error refreshing configuration:', error);
         setConfigError(true);
       });
-    }, 60000); // Refresh every minute
+    }, 60000);
     
     return () => {
       clearInterval(refreshInterval);
@@ -105,7 +98,6 @@ const App = () => {
   const [configLoaded, setConfigLoaded] = useState(false);
   const [configError, setConfigError] = useState(false);
   
-  // Initial configuration check at app startup
   useEffect(() => {
     const initialConfigCheck = async () => {
       try {
@@ -144,7 +136,6 @@ const App = () => {
           <ConfigHandler />
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/tutorial" element={<Tutorial />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
