@@ -117,12 +117,17 @@ export default AIChat;`;
 
   return (
     <div className="min-h-screen w-full flex flex-col">
-      <Banner />
+      <Banner subline="Das Tutorial zur Integration von OVHcloud AI Endpoints" />
       <main className="flex-1 container mx-auto px-4 py-20 md:py-24">
         <section className="mb-16 max-w-4xl mx-auto animate-fade-up">
-          <h1 className="text-3xl md:text-4xl font-bold mb-8 highlight-text">
-            Tutorial: Integration von OVHcloud AI Endpoints
-          </h1>
+          <div className="glass-morphism rounded-xl p-6 md:p-8 mb-12">
+            <p className="text-white/80 mb-8 leading-relaxed text-lg">
+              In diesem Tutorial erfahren Sie, wie Sie die OVHcloud AI Endpoints in Ihre Anwendungen integrieren können. 
+              Die folgende Anleitung zeigt Ihnen Schritt für Schritt, wie Sie das aktuelle Deepseek-R1 Large Language Model (LLM) 
+              über die OVHcloud AI Endpoints API anbinden und nutzen können. Mit den bereitgestellten Code-Beispielen 
+              können Sie schnell und einfach eigene KI-gestützte Anwendungen entwickeln.
+            </p>
+          </div>
           
           <div className="glass-morphism rounded-xl p-6 md:p-8 mb-12">
             <h2 className="text-2xl font-semibold mb-4">Erste Schritte mit OVHcloud AI Endpoints</h2>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { ADMIN_PASSWORD, API_CONFIG, FOOTER_CONFIG } from '@/config/env';
@@ -87,7 +86,7 @@ const Admin = () => {
   if (!isAuthenticated) {
     return (
       <>
-        <Banner />
+        <Banner subline="Admin Bereich" />
         <div className="container mx-auto flex items-center justify-center min-h-[80vh]">
           <Card className="w-full max-w-md glass-morphism">
             <CardHeader>
@@ -127,10 +126,8 @@ const Admin = () => {
 
   return (
     <>
-      <Banner />
+      <Banner subline="Admin Bereich" />
       <div className="container mx-auto py-10 mt-20">
-        <h1 className="text-3xl font-bold mb-8 highlight-text">Admin Bereich</h1>
-        
         <div className="mb-8">
           <Card className="glass-morphism">
             <CardHeader>
