@@ -1,10 +1,9 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, User, Send, ArrowDown, Database } from 'lucide-react';
+import { Bot, User, Send, ArrowDown, Database, AlertTriangle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import MessageItem from './MessageItem';
-import { sendMessage, incrementCounter, getCounter, getConfig } from '@/services/aiService';
+import { sendMessage, incrementCounter, getCounter, getConfig, getDailyMessageLimit, checkMessageLimit } from '@/services/aiService';
 import { useToast } from "@/hooks/use-toast";
 import CodeBlock from './CodeBlock';
 
@@ -15,9 +14,11 @@ const ChatInterface = () => {
   const [messageCount, setMessageCount] = useState(0);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [configError, setConfigError] = useState(false);
+  const [limitReached, setLimitReached] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+  const messageLimit = getDailyMessageLimit();
   
   // Check configuration on load
   useEffect(() => {
@@ -66,23 +67,24 @@ const ChatInterface = () => {
   }, []);
   
   useEffect(() => {
-    const loadCounter = async () => {
+    const loadCounterAndCheckLimit = async () => {
       try {
-        const initialCount = await getCounter();
-        setMessageCount(initialCount);
+        const { count, limitReached: limitStatus } = await checkMessageLimit();
+        setMessageCount(count);
+        setLimitReached(limitStatus);
       } catch (error) {
         console.error('Error loading counter:', error);
       }
     };
     
-    loadCounter();
+    loadCounterAndCheckLimit();
   }, []);
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     // Don't allow empty submissions
-    if (!input.trim() || configError) return;
+    if (!input.trim() || configError || limitReached) return;
     
     // Add user message to the chat
     const userMessage = { role: 'user' as const, content: input };
@@ -98,10 +100,6 @@ const ChatInterface = () => {
     setIsLoading(true);
     
     try {
-      // Increment message counter
-      const count = await incrementCounter();
-      setMessageCount(count);
-      
       // Format messages for the API
       const apiMessages = [...messages, userMessage].map(msg => ({
         role: msg.role,
@@ -114,6 +112,11 @@ const ChatInterface = () => {
       // Create a new assistant message with empty content to show the loading animation
       const assistantMessage = { role: 'assistant' as const, content: '' };
       setMessages(prev => [...prev, assistantMessage]);
+      
+      // Update message count and check limit after successful send
+      const { count, limitReached: newLimitStatus } = await checkMessageLimit();
+      setMessageCount(count);
+      setLimitReached(newLimitStatus);
       
       // Handle the streaming response
       let fullContent = '';
@@ -139,11 +142,16 @@ const ChatInterface = () => {
     } catch (error) {
       console.error('Error sending message:', error);
       
+      // Check if it's a limit error
+      if (error instanceof Error && error.message.includes('Tägliches Nachrichtenlimit')) {
+        setLimitReached(true);
+      }
+      
       // Show error toast
       toast({
         title: "Fehler",
         description: error instanceof Error 
-          ? `Die Nachricht konnte nicht gesendet werden: ${error.message}` 
+          ? `${error.message}` 
           : "Die Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.",
         variant: "destructive",
       });
@@ -180,7 +188,7 @@ const ChatInterface = () => {
     <div className="rounded-xl overflow-hidden glass-morphism border-white/10 flex flex-col h-[600px] md:h-[700px]">
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
-        {isEmpty && !hasError && (
+        {isEmpty && !hasError && !limitReached && (
           <div className="h-full flex flex-col items-center justify-center text-center p-6">
             <Bot className="h-12 w-12 text-white/20 mb-4" />
             <h3 className="text-xl font-semibold mb-2">Wie kann ich helfen?</h3>
@@ -212,6 +220,17 @@ const ChatInterface = () => {
             <p className="text-white/70 mb-4">
               Die Konfiguration konnte nicht von der Datenbank geladen werden. 
               Bitte wenden Sie sich an den Administrator.
+            </p>
+          </div>
+        )}
+        
+        {limitReached && isEmpty && (
+          <div className="h-full flex flex-col items-center justify-center text-center p-6">
+            <AlertTriangle className="h-12 w-12 text-amber-500 mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Tageslimit erreicht</h3>
+            <p className="text-white/70 mb-4">
+              Sie haben das tägliche Limit von {messageLimit} Nachrichten erreicht. 
+              Bitte versuchen Sie es morgen wieder.
             </p>
           </div>
         )}
@@ -249,20 +268,26 @@ const ChatInterface = () => {
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                if (!isLoading && input.trim() && !configError) {
+                if (!isLoading && input.trim() && !configError && !limitReached) {
                   handleSubmit(e as any);
                 }
               }
             }}
-            placeholder={hasError ? "Konfigurationsfehler. Bitte kontaktieren Sie den Administrator." : "Ich bin hier, um Ihre Fragen zu beantworten..."}
+            placeholder={
+              limitReached 
+                ? "Tageslimit erreicht. Bitte versuchen Sie es morgen wieder." 
+                : hasError 
+                  ? "Konfigurationsfehler. Bitte kontaktieren Sie den Administrator." 
+                  : "Ich bin hier, um Ihre Fragen zu beantworten..."
+            }
             className="flex-1 bg-white/5 border-white/10 placeholder:text-white/50 resize-none"
-            disabled={isLoading || hasError}
+            disabled={isLoading || hasError || limitReached}
             rows={1}
           />
           <Button 
             type="submit" 
             size="icon"
-            disabled={isLoading || !input.trim() || hasError}
+            disabled={isLoading || !input.trim() || hasError || limitReached}
             className={`rounded-full h-10 w-10 p-2 ${isLoading ? 'bg-white/5' : 'bg-accent'}`}
           >
             {isLoading ? (
@@ -274,11 +299,15 @@ const ChatInterface = () => {
         </div>
         
         {/* Message Counter */}
-        {messageCount > 0 && (
-          <div className="mt-2 text-xs text-white/50 text-right">
-            Nachrichten: {messageCount}
-          </div>
-        )}
+        <div className="mt-2 text-xs text-white/50 text-right flex justify-end items-center">
+          {limitReached && (
+            <span className="mr-2 text-amber-400 flex items-center">
+              <AlertTriangle className="h-3 w-3 mr-1" />
+              Limit erreicht
+            </span>
+          )}
+          <span>Nachrichten: {messageCount}/{messageLimit}</span>
+        </div>
       </form>
       
       {/* Scroll to Bottom Button */}

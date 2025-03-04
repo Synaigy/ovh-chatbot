@@ -1,4 +1,3 @@
-
 import OpenAI from 'openai';
 import { toast } from '@/components/ui/use-toast';
 
@@ -15,6 +14,9 @@ let apiConfig = {
 let dbErrorToastShown = false;
 // Flag to track if we've made at least one successful database fetch
 let hasSuccessfullyFetchedConfig = false;
+
+// Daily message limit
+const DAILY_MESSAGE_LIMIT = 50;
 
 // Initialize OpenAI client with placeholder values
 // Will be properly configured after the first getConfig() call
@@ -86,6 +88,19 @@ export const getCounter = async () => {
   } catch (error) {
     console.error('Error getting counter:', error);
     return 0;
+  }
+};
+
+export const checkMessageLimit = async (): Promise<{limitReached: boolean; count: number}> => {
+  try {
+    const count = await getCounter();
+    return { 
+      limitReached: count >= DAILY_MESSAGE_LIMIT,
+      count
+    };
+  } catch (error) {
+    console.error('Error checking message limit:', error);
+    return { limitReached: false, count: 0 };
   }
 };
 
@@ -171,6 +186,13 @@ export const updateConfig = async (newConfig: any) => {
 
 export const sendMessage = async (messages: any[]) => {
   try {
+    // Check if message limit reached
+    const { limitReached, count } = await checkMessageLimit();
+    
+    if (limitReached) {
+      throw new Error(`Tägliches Nachrichtenlimit erreicht (${DAILY_MESSAGE_LIMIT}). Bitte versuchen Sie es morgen wieder.`);
+    }
+    
     // Always attempt to fetch fresh configuration first
     const config = await getConfig();
     
@@ -233,3 +255,6 @@ export const forceConfigRefresh = async () => {
   
   return false;
 };
+
+// Export the message limit for use in UI components
+export const getDailyMessageLimit = () => DAILY_MESSAGE_LIMIT;
