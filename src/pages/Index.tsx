@@ -1,11 +1,43 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ChatInterface from '@/components/ChatInterface';
 import Banner from '@/components/Banner';
 import CodeBlock from '@/components/CodeBlock';
 import TutorialBanner from '@/components/TutorialBanner';
 import { GitHubLogoIcon } from '@radix-ui/react-icons';
+import { getConfig } from '@/services/aiService';
+import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
+  const [isConfigLoaded, setIsConfigLoaded] = useState(false);
+  const [configError, setConfigError] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const loadConfig = async () => {
+      try {
+        const config = await getConfig();
+        if (config && config.API_ENDPOINT && config.API_KEY) {
+          setIsConfigLoaded(true);
+          setConfigError(false);
+          console.log('Configuration successfully loaded in Index component');
+        } else {
+          setConfigError(true);
+          console.error('Failed to load complete configuration in Index component');
+        }
+      } catch (error) {
+        console.error('Error loading configuration in Index component:', error);
+        setConfigError(true);
+        toast({
+          title: "Konfigurationsfehler",
+          description: "Die Konfiguration konnte nicht geladen werden. Bitte versuchen Sie es später erneut oder wenden Sie sich an den Administrator.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    loadConfig();
+  }, [toast]);
+
   const installCode = `npm install openai`;
   
   const setupCode = `import OpenAI from 'openai';
@@ -121,6 +153,15 @@ export default AIChat;`;
       <Banner />
       
       <main className="flex-1 container mx-auto px-4 py-12 md:py-16">
+        {configError && (
+          <div className="mb-8 p-4 border border-red-500 bg-red-500/10 rounded-lg text-center">
+            <h2 className="text-xl font-semibold text-red-500 mb-2">Datenbank-Konfigurationsfehler</h2>
+            <p className="text-white/80">
+              Es konnte keine Verbindung zur Datenbank hergestellt werden. Einige Funktionen sind möglicherweise eingeschränkt.
+            </p>
+          </div>
+        )}
+
         <section className="mb-16 max-w-4xl mx-auto text-center animate-fade-up">
           <div className="inline-block px-3 py-1 rounded-full bg-white/5 mb-6">
             <span className="text-highlight text-sm font-medium">Jetzt verfügbar</span>
@@ -159,10 +200,8 @@ export default AIChat;`;
           <ChatInterface />
         </section>
 
-        {/* Tutorial Banner to separate the demo from the tutorial */}
         <TutorialBanner />
 
-        {/* Tutorial Content moved from Tutorial.tsx */}
         <section className="mb-16 max-w-4xl mx-auto animate-fade-up" style={{ animationDelay: "0.4s" }}>
           <div className="glass-morphism rounded-xl p-6 md:p-8 mb-12">
             <h2 className="text-2xl md:text-3xl font-semibold mb-4">
