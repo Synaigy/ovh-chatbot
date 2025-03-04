@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, User, Send, ArrowDown, Database, AlertTriangle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -276,7 +277,7 @@ const ChatInterface = () => {
             className={`rounded-full h-10 w-10 p-2 ${isLoading ? 'bg-white/5' : 'bg-accent'}`}
           >
             {isLoading ? (
-              <div className="animate-spin h-4 w-4 border-2 border-white/50 border-t-white rounded-full" />
+              <Send className="h-4 w-4 opacity-50" />
             ) : (
               <Send className="h-4 w-4" />
             )}
