@@ -34,8 +34,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         const form = e.currentTarget.form;
         if (form) {
           e.stopPropagation(); // Stop event propagation
-          const submitEvent = new Event('submit', { cancelable: true, bubbles: true });
-          handleSubmit(submitEvent as unknown as React.FormEvent<HTMLFormElement>);
+          form.requestSubmit(); // Use requestSubmit instead of custom events
         }
       }
     }

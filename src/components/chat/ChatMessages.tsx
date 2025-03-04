@@ -22,31 +22,64 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   onExampleClick
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [userScrolled, setUserScrolled] = useState(false);
   
-  useEffect(() => {
-    // Only scroll to bottom when new messages are added, not on every render
-    if (messages.length > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (smooth = true) => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: smooth ? 'smooth' : 'auto',
+        block: 'end'
+      });
     }
-  }, [messages]);
+  };
+  
+  // Initial scroll to bottom when component mounts
+  useEffect(() => {
+    if (messages.length > 0) {
+      scrollToBottom(false);
+    }
+  }, []);
+  
+  // Handle new messages - only auto-scroll if user hasn't manually scrolled up
+  useEffect(() => {
+    if (messages.length > 0 && !userScrolled) {
+      scrollToBottom();
+    }
+  }, [messages, userScrolled]);
+  
+  // Reset userScrolled when a new message is added by the user
+  useEffect(() => {
+    if (messages.length > 0 && messages[messages.length - 1].role === 'user') {
+      setUserScrolled(false);
+      scrollToBottom();
+    }
+  }, [messages.length]);
   
   useEffect(() => {
     const handleScroll = () => {
-      if (messagesEndRef.current) {
-        const chatWindow = messagesEndRef.current.parentElement;
-        if (chatWindow) {
-          const isAtBottom = chatWindow.scrollHeight - chatWindow.scrollTop === chatWindow.clientHeight;
-          setShowScrollButton(!isAtBottom);
+      if (containerRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+        // Check if user has scrolled up
+        const isScrolledToBottom = Math.abs(scrollHeight - scrollTop - clientHeight) < 50;
+        
+        setShowScrollButton(!isScrolledToBottom);
+        
+        // Only set userScrolled if they've scrolled away from bottom
+        if (!isScrolledToBottom) {
+          setUserScrolled(true);
+        } else {
+          setUserScrolled(false);
         }
       }
     };
     
-    const chatWindow = messagesEndRef.current?.parentElement;
-    chatWindow?.addEventListener('scroll', handleScroll);
+    const chatContainer = containerRef.current;
+    chatContainer?.addEventListener('scroll', handleScroll);
     
     return () => {
-      chatWindow?.removeEventListener('scroll', handleScroll);
+      chatContainer?.removeEventListener('scroll', handleScroll);
     };
   }, []);
   
@@ -86,7 +119,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   }
   
   return (
-    <>
+    <div ref={containerRef} className="h-full overflow-y-auto scrollbar-thin">
       <div className="space-y-4">
         {messages.map((message, index) => (
           <MessageItem 
@@ -103,18 +136,18 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
         <Button
           variant="ghost"
           size="icon"
-          className="absolute bottom-20 right-8 rounded-full bg-black/50 hover:bg-black/70"
+          className="fixed bottom-20 right-8 rounded-full bg-black/50 hover:bg-black/70 z-10"
           onClick={(e) => {
-            e.preventDefault(); // Prevent scrolling issues
-            if (messagesEndRef.current) {
-              messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-            }
+            e.preventDefault();
+            e.stopPropagation();
+            scrollToBottom();
+            setUserScrolled(false);
           }}
         >
           <ArrowDown className="h-4 w-4" />
         </Button>
       )}
-    </>
+    </div>
   );
 };
 
