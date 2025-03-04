@@ -60,7 +60,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   };
   
   return (
-    <form onSubmit={onSubmit} className="border-t border-white/10 p-4">
+    <form onSubmit={onSubmit} className="border-t border-white/10 p-4 bg-card">
       <div className="flex items-start space-x-2">
         <Textarea
           ref={textareaRef}
@@ -80,7 +80,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                 ? "Konfigurationsfehler. Bitte kontaktieren Sie den Administrator." 
                 : "Ich bin hier, um Ihre Fragen zu beantworten..."
           }
-          className="flex-1 bg-white/5 border-white/10 placeholder:text-white/50 resize-none"
+          className="flex-1 bg-card/50 border-white/10 placeholder:text-white/50 resize-none"
           disabled={isLoading || hasError || limitReached}
           rows={1}
         />

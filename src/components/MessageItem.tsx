@@ -96,7 +96,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isLast = false, isLo
         <div className={cn(
           'flex-shrink-0 flex items-start justify-center w-10 h-10 rounded-full',
           isUser ? 'ml-3' : 'mr-3',
-          isUser ? 'bg-highlight/20' : 'bg-black/20'
+          isUser ? 'bg-highlight/20' : 'bg-muted'
         )}>
           {isUser ? (
             <User className="w-5 h-5 mt-2.5" />
@@ -108,7 +108,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isLast = false, isLo
           'flex flex-col',
           'rounded-2xl p-4',
           isUser ? 'rounded-tr-sm' : 'rounded-tl-sm',
-          isUser ? 'bg-highlight/10' : isLoading ? 'bg-white/10' : 'bg-[#FF3366]/20',
+          isUser ? 'bg-highlight/10' : isLoading ? 'bg-muted' : 'bg-primary/10',
           isLast && isUser ? 'highlight-glow' : '',
           isLoading ? 'animate-pulse' : ''
         )}>
