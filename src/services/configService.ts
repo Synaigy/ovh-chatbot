@@ -1,54 +1,134 @@
 
-import { API_CONFIG, FOOTER_CONFIG } from '@/config/env';
 import { toast } from '@/components/ui/use-toast';
+import { getConfig } from './aiService';
 
 // Store initial configuration
-let currentApiConfig = { ...API_CONFIG };
-let currentFooterConfig = { ...FOOTER_CONFIG };
-
-// Function to check if configuration has changed
-export const detectConfigChanges = () => {
-  // Check if API configuration has changed
-  if (
-    currentApiConfig.ENDPOINT !== API_CONFIG.ENDPOINT ||
-    currentApiConfig.API_KEY !== API_CONFIG.API_KEY
-  ) {
-    toast({
-      title: "Konfiguration aktualisiert",
-      description: "Die API-Konfiguration wurde geändert. Die Änderungen werden jetzt wirksam.",
-      variant: "default",
-    });
-    
-    // Update stored configuration
-    currentApiConfig = { ...API_CONFIG };
-    
-    // Force refresh to apply new configuration
-    window.location.reload();
-    return true;
-  }
-  
-  // Check if footer configuration has changed
-  if (
-    currentFooterConfig.CONTACT_PERSON.NAME !== FOOTER_CONFIG.CONTACT_PERSON.NAME ||
-    currentFooterConfig.CONTACT_PERSON.TITLE !== FOOTER_CONFIG.CONTACT_PERSON.TITLE ||
-    currentFooterConfig.CONTACT_PERSON.PHOTO_URL !== FOOTER_CONFIG.CONTACT_PERSON.PHOTO_URL ||
-    currentFooterConfig.CONTACT_PERSON.MEETING_URL !== FOOTER_CONFIG.CONTACT_PERSON.MEETING_URL ||
-    currentFooterConfig.CONTACT_PERSON.LINKEDIN_URL !== FOOTER_CONFIG.CONTACT_PERSON.LINKEDIN_URL ||
-    currentFooterConfig.COMPANY.NAME !== FOOTER_CONFIG.COMPANY.NAME
-  ) {
-    toast({
-      title: "Konfiguration aktualisiert",
-      description: "Die Kontakt- und Firmeninformationen wurden geändert. Die Änderungen werden jetzt wirksam.",
-      variant: "default",
-    });
-    
-    // Update stored configuration
-    currentFooterConfig = { ...FOOTER_CONFIG };
-    
-    // Force refresh to apply new configuration
-    window.location.reload();
-    return true;
-  }
-  
-  return false;
+let currentApiConfig = {
+  ENDPOINT: '',
+  API_KEY: ''
 };
+
+let currentFooterConfig = {
+  CONTACT_PERSON: {
+    NAME: '',
+    TITLE: '',
+    PHOTO_URL: '',
+    MEETING_URL: '',
+    LINKEDIN_URL: ''
+  },
+  COMPANY: {
+    NAME: ''
+  }
+};
+
+// Function to load configuration from the database
+export const loadConfiguration = async () => {
+  try {
+    const config = await getConfig();
+    
+    // Update stored API configuration
+    currentApiConfig = {
+      ENDPOINT: config.API_ENDPOINT || '',
+      API_KEY: config.API_KEY || ''
+    };
+    
+    // Update stored footer configuration
+    currentFooterConfig = {
+      CONTACT_PERSON: {
+        NAME: config.CONTACT_NAME || '',
+        TITLE: config.CONTACT_TITLE || '',
+        PHOTO_URL: config.CONTACT_PHOTO || '',
+        MEETING_URL: config.CONTACT_MEETING || '',
+        LINKEDIN_URL: config.CONTACT_LINKEDIN || ''
+      },
+      COMPANY: {
+        NAME: config.COMPANY_NAME || ''
+      }
+    };
+    
+    return {
+      api: currentApiConfig,
+      footer: currentFooterConfig
+    };
+  } catch (error) {
+    console.error('Error loading configuration:', error);
+    toast({
+      title: "Fehler beim Laden der Konfiguration",
+      description: "Die Konfiguration konnte nicht geladen werden. Bitte versuchen Sie es später erneut.",
+      variant: "destructive",
+    });
+    return null;
+  }
+};
+
+// Function to check if configuration has changed and reload if necessary
+export const detectConfigChanges = async () => {
+  try {
+    const newConfig = await getConfig();
+    
+    // Check if API configuration has changed
+    if (
+      currentApiConfig.ENDPOINT !== newConfig.API_ENDPOINT ||
+      currentApiConfig.API_KEY !== newConfig.API_KEY
+    ) {
+      toast({
+        title: "Konfiguration aktualisiert",
+        description: "Die API-Konfiguration wurde geändert. Die Änderungen werden jetzt wirksam.",
+        variant: "default",
+      });
+      
+      // Update stored configuration
+      currentApiConfig = {
+        ENDPOINT: newConfig.API_ENDPOINT,
+        API_KEY: newConfig.API_KEY
+      };
+      
+      // Force refresh to apply new configuration
+      window.location.reload();
+      return true;
+    }
+    
+    // Check if footer configuration has changed
+    if (
+      currentFooterConfig.CONTACT_PERSON.NAME !== newConfig.CONTACT_NAME ||
+      currentFooterConfig.CONTACT_PERSON.TITLE !== newConfig.CONTACT_TITLE ||
+      currentFooterConfig.CONTACT_PERSON.PHOTO_URL !== newConfig.CONTACT_PHOTO ||
+      currentFooterConfig.CONTACT_PERSON.MEETING_URL !== newConfig.CONTACT_MEETING ||
+      currentFooterConfig.CONTACT_PERSON.LINKEDIN_URL !== newConfig.CONTACT_LINKEDIN ||
+      currentFooterConfig.COMPANY.NAME !== newConfig.COMPANY_NAME
+    ) {
+      toast({
+        title: "Konfiguration aktualisiert",
+        description: "Die Kontakt- und Firmeninformationen wurden geändert. Die Änderungen werden jetzt wirksam.",
+        variant: "default",
+      });
+      
+      // Update stored configuration
+      currentFooterConfig = {
+        CONTACT_PERSON: {
+          NAME: newConfig.CONTACT_NAME,
+          TITLE: newConfig.CONTACT_TITLE,
+          PHOTO_URL: newConfig.CONTACT_PHOTO,
+          MEETING_URL: newConfig.CONTACT_MEETING,
+          LINKEDIN_URL: newConfig.CONTACT_LINKEDIN
+        },
+        COMPANY: {
+          NAME: newConfig.COMPANY_NAME
+        }
+      };
+      
+      // Force refresh to apply new configuration
+      window.location.reload();
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error detecting configuration changes:', error);
+    return false;
+  }
+};
+
+// Export getter functions for configuration
+export const getApiConfig = () => currentApiConfig;
+export const getFooterConfig = () => currentFooterConfig;

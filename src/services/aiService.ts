@@ -1,16 +1,42 @@
 
 import OpenAI from 'openai';
-import { API_CONFIG } from '../config/env';
 
-// Initialize OpenAI client with the API key
-const openaiClient = new OpenAI({
-  apiKey: API_CONFIG.API_KEY,
-  baseURL: API_CONFIG.ENDPOINT,
+// Backend API URL for the counter and configuration - using HTTPS and the proper domain
+const API_URL = 'https://chat.synaigy.cloud/api';
+
+// Store API configuration fetched from the database
+let apiConfig = {
+  ENDPOINT: '',
+  API_KEY: ''
+};
+
+// Initialize OpenAI client with placeholder values
+// Will be properly configured after the first getConfig() call
+let openaiClient = new OpenAI({
+  apiKey: 'placeholder', // Will be replaced
+  baseURL: 'placeholder', // Will be replaced
   dangerouslyAllowBrowser: true // Only for demo purposes
 });
 
-// Backend API URL for the counter - updated to use HTTPS and the proper domain
-const API_URL = 'https://chat.synaigy.cloud/api';
+// Function to initialize the OpenAI client with configuration from database
+const initializeOpenAIClient = (config: any) => {
+  if (config.API_ENDPOINT && config.API_KEY) {
+    apiConfig = {
+      ENDPOINT: config.API_ENDPOINT,
+      API_KEY: config.API_KEY
+    };
+    
+    openaiClient = new OpenAI({
+      apiKey: apiConfig.API_KEY,
+      baseURL: apiConfig.ENDPOINT,
+      dangerouslyAllowBrowser: true // Only for demo purposes
+    });
+    
+    console.log('OpenAI client initialized with configuration from database');
+    return true;
+  }
+  return false;
+};
 
 export const incrementCounter = async () => {
   try {
@@ -65,7 +91,12 @@ export const getConfig = async () => {
       throw new Error(`Failed to get config: ${response.status} ${response.statusText}`);
     }
     
-    return await response.json();
+    const config = await response.json();
+    
+    // Initialize OpenAI client with fetched config
+    initializeOpenAIClient(config);
+    
+    return config;
   } catch (error) {
     console.error('Error getting configuration:', error);
     throw error;
@@ -86,7 +117,12 @@ export const updateConfig = async (newConfig: any) => {
       throw new Error(`Failed to update config: ${response.status} ${response.statusText}`);
     }
     
-    return await response.json();
+    const updatedConfig = await response.json();
+    
+    // Re-initialize OpenAI client with the updated config
+    initializeOpenAIClient(updatedConfig);
+    
+    return updatedConfig;
   } catch (error) {
     console.error('Error updating configuration:', error);
     throw error;
@@ -95,6 +131,11 @@ export const updateConfig = async (newConfig: any) => {
 
 export const sendMessage = async (messages: any[]) => {
   try {
+    // If client is not initialized yet, fetch configuration
+    if (!apiConfig.API_KEY || !apiConfig.ENDPOINT) {
+      await getConfig();
+    }
+    
     // Increment the counter
     await incrementCounter();
     
@@ -112,14 +153,18 @@ export const sendMessage = async (messages: any[]) => {
 };
 
 // These functions are kept for compatibility
-export const initializeClient = (key: string) => {
+export const initializeClient = async (key: string) => {
+  if (!apiConfig.API_KEY || !apiConfig.ENDPOINT) {
+    await getConfig();
+  }
   return openaiClient;
 };
 
 export const isClientInitialized = () => {
-  return true;
+  return apiConfig.API_KEY && apiConfig.ENDPOINT;
 };
 
-export const resetClient = () => {
-  // No-op since we're using a hardcoded token
+export const resetClient = async () => {
+  apiConfig = { ENDPOINT: '', API_KEY: '' };
+  await getConfig(); // Reload the configuration
 };
