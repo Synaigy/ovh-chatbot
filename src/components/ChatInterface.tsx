@@ -3,7 +3,14 @@ import { Bot, User, Send, ArrowDown, Database, AlertTriangle } from 'lucide-reac
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import MessageItem from './MessageItem';
-import { sendMessage, incrementCounter, getCounter, getConfig, getDailyMessageLimit, checkMessageLimit } from '@/services/aiService';
+import { 
+  sendMessage, 
+  incrementCounter, 
+  getSessionCounter, 
+  resetSessionCounter, 
+  getDailyMessageLimit, 
+  checkMessageLimit 
+} from '@/services/aiService';
 import { useToast } from "@/hooks/use-toast";
 import CodeBlock from './CodeBlock';
 
@@ -11,7 +18,6 @@ const ChatInterface = () => {
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [messageCount, setMessageCount] = useState(0);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [configError, setConfigError] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
@@ -19,6 +25,9 @@ const ChatInterface = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
   const messageLimit = getDailyMessageLimit();
+  
+  // Modify this section to use the session counter
+  const [messageCount, setMessageCount] = useState(getSessionCounter());
   
   // Check configuration on load
   useEffect(() => {
@@ -66,14 +75,23 @@ const ChatInterface = () => {
     };
   }, []);
   
+  // Reset session counter on component mount
+  useEffect(() => {
+    // Reset session counter when component mounts
+    resetSessionCounter();
+    setMessageCount(0);
+  }, []);
+  
+  // Replace loadCounterAndCheckLimit function
   useEffect(() => {
     const loadCounterAndCheckLimit = async () => {
       try {
-        const { count, limitReached: limitStatus } = await checkMessageLimit();
-        setMessageCount(count);
+        // Check if limit reached based on session counter
+        const { limitReached: limitStatus } = await checkMessageLimit();
+        setMessageCount(getSessionCounter());
         setLimitReached(limitStatus);
       } catch (error) {
-        console.error('Error loading counter:', error);
+        console.error('Error checking message limit:', error);
       }
     };
     
@@ -113,9 +131,9 @@ const ChatInterface = () => {
       const assistantMessage = { role: 'assistant' as const, content: '' };
       setMessages(prev => [...prev, assistantMessage]);
       
-      // Update message count and check limit after successful send
-      const { count, limitReached: newLimitStatus } = await checkMessageLimit();
-      setMessageCount(count);
+      // Update session message count and check limit after successful send
+      setMessageCount(getSessionCounter());
+      const { limitReached: newLimitStatus } = await checkMessageLimit();
       setLimitReached(newLimitStatus);
       
       // Handle the streaming response
@@ -166,7 +184,6 @@ const ChatInterface = () => {
     }
   };
   
-  // Check for any messages and configuration status
   const isEmpty = messages.length === 0;
   const hasError = configError === true;
   
@@ -184,6 +201,7 @@ const ChatInterface = () => {
     textareaRef.current?.focus();
   };
   
+  // Message Counter display - clarify that this is the session counter
   return (
     <div className="rounded-xl overflow-hidden glass-morphism border-white/10 flex flex-col h-[600px] md:h-[700px]">
       {/* Messages Container */}
@@ -298,15 +316,15 @@ const ChatInterface = () => {
           </Button>
         </div>
         
-        {/* Message Counter */}
+        {/* Session Message Counter - updated text */}
         <div className="mt-2 text-xs text-white/50 text-right flex justify-end items-center">
           {limitReached && (
             <span className="mr-2 text-amber-400 flex items-center">
               <AlertTriangle className="h-3 w-3 mr-1" />
-              Limit erreicht
+              Session-Limit erreicht
             </span>
           )}
-          <span>Nachrichten: {messageCount}/{messageLimit}</span>
+          <span>Session-Nachrichten: {messageCount}/{messageLimit}</span>
         </div>
       </form>
       

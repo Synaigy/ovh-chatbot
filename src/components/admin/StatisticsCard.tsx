@@ -6,17 +6,24 @@ import { Progress } from '@/components/ui/progress';
 interface StatisticsCardProps {
   counter: number | null;
   apiUrl?: string;
+  isGlobalCounter?: boolean;
 }
 
-const StatisticsCard = ({ counter, apiUrl }: StatisticsCardProps) => {
+const StatisticsCard = ({ counter, apiUrl, isGlobalCounter = false }: StatisticsCardProps) => {
   // Calculate progress percentage, max at 50 messages
   const progressValue = counter !== null ? Math.min((counter / 50) * 100, 100) : 0;
   
   return (
     <Card className="glass-morphism">
       <CardHeader>
-        <CardTitle>Chat Statistik</CardTitle>
-        <CardDescription>Gesamtanzahl der Chat-Anfragen</CardDescription>
+        <CardTitle>
+          {isGlobalCounter ? "Globale Chat Statistik" : "Chat Statistik"}
+        </CardTitle>
+        <CardDescription>
+          {isGlobalCounter 
+            ? "Gesamtanzahl aller Chat-Anfragen von allen Nutzern" 
+            : "Anzahl der Chat-Anfragen in dieser Session"}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col space-y-4">

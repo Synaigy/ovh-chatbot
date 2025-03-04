@@ -15,8 +15,11 @@ let dbErrorToastShown = false;
 // Flag to track if we've made at least one successful database fetch
 let hasSuccessfullyFetchedConfig = false;
 
-// Daily message limit
+// Daily message limit per session
 const DAILY_MESSAGE_LIMIT = 50;
+
+// Session counter to track user's usage in current session
+let sessionCounter = 0;
 
 // Initialize OpenAI client with placeholder values
 // Will be properly configured after the first getConfig() call
@@ -48,7 +51,7 @@ const initializeOpenAIClient = (config: any) => {
 
 export const incrementCounter = async () => {
   try {
-    // Call the backend API to increment the counter using POST method to match server implementation
+    // Increment global counter in the database
     const response = await fetch(`${API_URL}/counter/increment`, {
       method: 'POST',
       headers: {
@@ -63,17 +66,22 @@ export const incrementCounter = async () => {
     const newCount = await response.text();
     const countValue = parseInt(newCount, 10);
     
-    console.log(`Counter incremented to ${countValue}`);
+    // Also increment the session counter
+    sessionCounter++;
+    
+    console.log(`Global counter incremented to ${countValue}, Session counter: ${sessionCounter}`);
     return countValue;
   } catch (error) {
     console.error('Error incrementing counter:', error);
+    // Still increment session counter even if global counter fails
+    sessionCounter++;
     return 1; // Start from 1 if there's an error
   }
 };
 
-export const getCounter = async () => {
+export const getGlobalCounter = async () => {
   try {
-    // Call the backend API to get the counter value
+    // Call the backend API to get the total counter value from the database
     const response = await fetch(`${API_URL}/counter`);
     
     if (!response.ok) {
@@ -83,7 +91,7 @@ export const getCounter = async () => {
     const countText = await response.text();
     const count = parseInt(countText.trim() || '0', 10);
     
-    console.log(`API Counter Response from ${API_URL}/counter:`, countText);
+    console.log(`Global API Counter Response from ${API_URL}/counter:`, countText);
     
     // If NaN, return 0 instead
     return {
@@ -91,7 +99,7 @@ export const getCounter = async () => {
       url: `${API_URL}/counter`
     };
   } catch (error) {
-    console.error('Error getting counter:', error);
+    console.error('Error getting global counter:', error);
     return {
       count: 0,
       url: `${API_URL}/counter (error occurred)`
@@ -99,17 +107,33 @@ export const getCounter = async () => {
   }
 };
 
+// Get the current session counter (for the current user session)
+export const getSessionCounter = () => {
+  return sessionCounter;
+};
+
+// Reset the session counter (e.g., on page refresh or new session)
+export const resetSessionCounter = () => {
+  sessionCounter = 0;
+  return sessionCounter;
+};
+
 export const checkMessageLimit = async (): Promise<{limitReached: boolean; count: number}> => {
   try {
-    const count = await getCounter();
+    // Use session counter, not global counter, for message limit checking
     return { 
-      limitReached: count.count >= DAILY_MESSAGE_LIMIT,
-      count: count.count
+      limitReached: sessionCounter >= DAILY_MESSAGE_LIMIT,
+      count: sessionCounter
     };
   } catch (error) {
     console.error('Error checking message limit:', error);
     return { limitReached: false, count: 0 };
   }
+};
+
+// Keep backward compatibility with existing code
+export const getCounter = async () => {
+  return getGlobalCounter();
 };
 
 export const getConfig = async () => {
