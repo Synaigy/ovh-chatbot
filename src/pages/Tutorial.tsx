@@ -1,4 +1,3 @@
-
 import React from 'react';
 import CodeBlock from '@/components/CodeBlock';
 import Banner from '@/components/Banner';
@@ -140,7 +139,7 @@ export default AIChat;`;
               </p>
               <div className="mt-3">
                 <a 
-                  href="https://github.com/synaigy/ovh-ai-endpoints-tutorial" 
+                  href="https://github.com/Synaigy/ovh-chatbot" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-3 py-1 text-sm bg-white/10 hover:bg-white/20 rounded-full transition-colors"
