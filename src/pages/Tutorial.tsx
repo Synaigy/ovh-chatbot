@@ -1,6 +1,5 @@
 
 import React from 'react';
-import Footer from '@/components/Footer';
 import CodeBlock from '@/components/CodeBlock';
 import Banner from '@/components/Banner';
 
@@ -194,7 +193,7 @@ export default AIChat;`;
         </section>
       </main>
       
-      <Footer />
+      {/* Remove the duplicate Footer from here */}
     </div>
   );
 };
