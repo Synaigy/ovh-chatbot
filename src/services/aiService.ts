@@ -1,4 +1,3 @@
-
 import OpenAI from 'openai';
 
 // Backend API URL for the counter and configuration - using HTTPS and the proper domain
@@ -10,7 +9,7 @@ let apiConfig = {
   API_KEY: ''
 };
 
-// Default configuration to use when database is unavailable
+// Default configuration to use ONLY when database is completely unavailable
 const DEFAULT_CONFIG = {
   API_ENDPOINT: 'https://deepseek-r1-distill-llama-70b.endpoints.kepler.ai.cloud.ovh.net/api/openai_compat/v1',
   API_KEY: 'placeholder-key-only-for-ui-rendering',
@@ -24,6 +23,8 @@ const DEFAULT_CONFIG = {
 
 // Flag to track if we've already shown a database connection error toast
 let dbErrorToastShown = false;
+// Flag to track if we've made at least one successful database fetch
+let hasSuccessfullyFetchedConfig = false;
 
 // Initialize OpenAI client with placeholder values
 // Will be properly configured after the first getConfig() call
@@ -115,6 +116,7 @@ export const getConfig = async () => {
     
     const config = await response.json();
     dbErrorToastShown = false; // Reset error toast flag on successful fetch
+    hasSuccessfullyFetchedConfig = true; // Mark that we've successfully fetched config
     
     // Initialize OpenAI client with fetched config
     initializeOpenAIClient(config);
@@ -123,7 +125,23 @@ export const getConfig = async () => {
   } catch (error) {
     console.error('Error getting configuration:', error);
     
-    // Return default config for UI rendering when database is unavailable
+    // Only use DEFAULT_CONFIG if we've never successfully fetched from the database
+    if (hasSuccessfullyFetchedConfig) {
+      console.log('Using last known good configuration instead of DEFAULT_CONFIG');
+      // Return the current apiConfig instead of default if we've had a successful fetch before
+      return {
+        API_ENDPOINT: apiConfig.ENDPOINT,
+        API_KEY: apiConfig.API_KEY,
+        // Include any other persisted config values we have
+        ...DEFAULT_CONFIG,  // Use defaults only for missing values
+        // Override with any values we actually have
+        ...(apiConfig.ENDPOINT ? { API_ENDPOINT: apiConfig.ENDPOINT } : {}),
+        ...(apiConfig.API_KEY ? { API_KEY: apiConfig.API_KEY } : {})
+      };
+    }
+    
+    // Return default config only when database has never been available
+    console.warn('Using DEFAULT_CONFIG as fallback since database has never been available');
     return DEFAULT_CONFIG;
   }
 };
@@ -162,9 +180,17 @@ export const updateConfig = async (newConfig: any) => {
 
 export const sendMessage = async (messages: any[]) => {
   try {
-    // If client is not initialized yet, fetch configuration
+    // Always attempt to fetch fresh configuration first
+    const config = await getConfig();
+    
+    // Only initialize if needed
     if (!apiConfig.API_KEY || !apiConfig.ENDPOINT) {
-      await getConfig();
+      if (config && config.API_ENDPOINT && config.API_KEY) {
+        initializeOpenAIClient(config);
+      } else {
+        console.error('Failed to get valid API configuration');
+        throw new Error('Invalid API configuration');
+      }
     }
     
     // Increment the counter
@@ -198,4 +224,21 @@ export const isClientInitialized = () => {
 export const resetClient = async () => {
   apiConfig = { ENDPOINT: '', API_KEY: '' };
   await getConfig(); // Reload the configuration
+};
+
+// Add a force refresh function to ensure we have the latest config
+export const forceConfigRefresh = async () => {
+  // Clear current config
+  apiConfig = { ENDPOINT: '', API_KEY: '' };
+  
+  // Fetch fresh config from database
+  const freshConfig = await getConfig();
+  
+  // Initialize client with fresh config
+  if (freshConfig) {
+    initializeOpenAIClient(freshConfig);
+    return true;
+  }
+  
+  return false;
 };

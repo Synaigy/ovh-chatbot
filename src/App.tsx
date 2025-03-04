@@ -11,7 +11,7 @@ import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import { getConfig } from "./services/aiService";
+import { getConfig, forceConfigRefresh } from "./services/aiService";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +24,9 @@ const ConfigHandler = () => {
     const loadConfig = async () => {
       if (!configLoaded) {
         try {
+          // Force a fresh config fetch on startup
+          await forceConfigRefresh();
+          
           const config = await getConfig();
           if (config) {
             setConfigLoaded(true);
@@ -43,7 +46,18 @@ const ConfigHandler = () => {
     
     loadConfig();
     
-    // No cleanup needed as we're not setting up event listeners anymore
+    // Set up periodic refresh of configuration
+    const refreshInterval = setInterval(() => {
+      forceConfigRefresh().then(() => {
+        console.log('Configuration refreshed periodically');
+      }).catch(error => {
+        console.error('Error refreshing configuration:', error);
+      });
+    }, 300000); // Refresh every 5 minutes
+    
+    return () => {
+      clearInterval(refreshInterval);
+    };
   }, [configLoaded]);
   
   return null;

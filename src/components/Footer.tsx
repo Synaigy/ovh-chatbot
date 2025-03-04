@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Linkedin } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getConfig } from '@/services/aiService';
+import { getConfig, forceConfigRefresh } from '@/services/aiService';
 
 const Footer = () => {
   const [config, setConfig] = useState({
@@ -19,9 +19,13 @@ const Footer = () => {
   });
   
   useEffect(() => {
-    // Load configuration directly from the API
+    // Load configuration directly from the API with a forced refresh
     const loadConfig = async () => {
       try {
+        // Force a refresh of the configuration first
+        await forceConfigRefresh();
+        
+        // Then get the config
         const dbConfig = await getConfig();
         if (dbConfig) {
           setConfig({
@@ -43,6 +47,19 @@ const Footer = () => {
     };
     
     loadConfig();
+    
+    // Refresh config whenever component becomes visible
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadConfig();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
   
   const { CONTACT_PERSON, COMPANY } = config;
