@@ -1,16 +1,17 @@
+
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { ADMIN_PASSWORD, API_CONFIG, FOOTER_CONFIG } from '@/config/env';
 import { getCounter, updateConfig } from '@/services/aiService';
-import { Lock } from 'lucide-react';
 import Banner from '@/components/Banner';
+import LoginForm from '@/components/admin/LoginForm';
+import StatisticsCard from '@/components/admin/StatisticsCard';
+import ApiConfigForm from '@/components/admin/ApiConfigForm';
+import ContactConfigForm from '@/components/admin/ContactConfigForm';
+import CompanyConfigForm from '@/components/admin/CompanyConfigForm';
 
 const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [counter, setCounter] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -57,14 +58,43 @@ const Admin = () => {
     };
   }, [isAuthenticated]);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = (password: string) => {
     if (password === ADMIN_PASSWORD) {
       setIsAuthenticated(true);
       setAuthError('');
     } else {
       setAuthError('Falsches Passwort');
     }
+  };
+
+  const handleApiChange = (key: 'endpoint' | 'apiKey', value: string) => {
+    setConfig({
+      ...config,
+      api: {
+        ...config.api,
+        [key]: value
+      }
+    });
+  };
+
+  const handleContactChange = (field: string, value: string) => {
+    setConfig({
+      ...config,
+      contact: {
+        ...config.contact,
+        [field]: value
+      }
+    });
+  };
+
+  const handleCompanyNameChange = (value: string) => {
+    setConfig({
+      ...config,
+      company: {
+        ...config.company,
+        name: value
+      }
+    });
   };
 
   const handleSave = async () => {
@@ -100,39 +130,7 @@ const Admin = () => {
     return (
       <>
         <Banner subline="Admin Bereich" />
-        <div className="container mx-auto flex items-center justify-center min-h-[80vh]">
-          <Card className="w-full max-w-md glass-morphism">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lock size={20} /> Admin Login
-              </CardTitle>
-              <CardDescription>
-                Bitte geben Sie das Admin-Passwort ein, um fortzufahren.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleLogin}>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Input
-                      type="password"
-                      placeholder="Passwort"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="glass-morphism"
-                    />
-                    {authError && (
-                      <p className="text-red-500 text-sm">{authError}</p>
-                    )}
-                  </div>
-                  <Button type="submit" className="w-full bg-highlight hover:bg-highlight/90">
-                    Anmelden
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+        <LoginForm onLogin={handleLogin} authError={authError} />
       </>
     );
   }
@@ -142,124 +140,27 @@ const Admin = () => {
       <Banner subline="Admin Bereich" />
       <div className="container mx-auto py-10 mt-20">
         <div className="mb-8">
-          <Card className="glass-morphism">
-            <CardHeader>
-              <CardTitle>Chat Statistik</CardTitle>
-              <CardDescription>Gesamtanzahl der Chat-Anfragen</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-5xl font-bold highlight-text">{counter !== null ? counter : '...'}</div>
-            </CardContent>
-          </Card>
+          <StatisticsCard counter={counter} />
         </div>
         
         <div className="space-y-8">
-          <Card className="glass-morphism">
-            <CardHeader>
-              <CardTitle>API Konfiguration</CardTitle>
-              <CardDescription>Ändern Sie die API-Einstellungen</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">API Endpoint</label>
-                  <Input 
-                    value={config.api.endpoint} 
-                    onChange={(e) => setConfig({...config, api: {...config.api, endpoint: e.target.value}})}
-                    className="glass-morphism"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">API Key</label>
-                  <Input 
-                    type="password" 
-                    value={config.api.apiKey} 
-                    onChange={(e) => setConfig({...config, api: {...config.api, apiKey: e.target.value}})}
-                    className="glass-morphism"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <ApiConfigForm 
+            endpoint={config.api.endpoint} 
+            apiKey={config.api.apiKey} 
+            onChange={handleApiChange} 
+          />
           
-          <Card className="glass-morphism">
-            <CardHeader>
-              <CardTitle>Kontakt Konfiguration</CardTitle>
-              <CardDescription>Ändern Sie die Kontaktinformationen im Footer</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Name</label>
-                  <Input 
-                    value={config.contact.name} 
-                    onChange={(e) => setConfig({...config, contact: {...config.contact, name: e.target.value}})}
-                    className="glass-morphism"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Titel</label>
-                  <Input 
-                    value={config.contact.title} 
-                    onChange={(e) => setConfig({...config, contact: {...config.contact, title: e.target.value}})}
-                    className="glass-morphism"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Foto URL</label>
-                  <Input 
-                    value={config.contact.photoUrl} 
-                    onChange={(e) => setConfig({...config, contact: {...config.contact, photoUrl: e.target.value}})}
-                    className="glass-morphism"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Meeting URL</label>
-                  <Input 
-                    value={config.contact.meetingUrl} 
-                    onChange={(e) => setConfig({...config, contact: {...config.contact, meetingUrl: e.target.value}})}
-                    className="glass-morphism"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">LinkedIn URL</label>
-                  <Input 
-                    value={config.contact.linkedinUrl} 
-                    onChange={(e) => setConfig({...config, contact: {...config.contact, linkedinUrl: e.target.value}})}
-                    className="glass-morphism"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <ContactConfigForm 
+            contact={config.contact}
+            onChange={handleContactChange}
+          />
           
-          <Card className="glass-morphism">
-            <CardHeader>
-              <CardTitle>Firmen Konfiguration</CardTitle>
-              <CardDescription>Ändern Sie die Firmeninformationen</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Firmenname</label>
-                  <Input 
-                    value={config.company.name} 
-                    onChange={(e) => setConfig({...config, company: {...config.company, name: e.target.value}})}
-                    className="glass-morphism"
-                  />
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                onClick={handleSave} 
-                disabled={isSaving}
-                className="ml-auto bg-highlight hover:bg-highlight/90"
-              >
-                {isSaving ? 'Wird gespeichert...' : 'Konfiguration speichern'}
-              </Button>
-            </CardFooter>
-          </Card>
+          <CompanyConfigForm 
+            name={config.company.name}
+            onChange={handleCompanyNameChange}
+            onSave={handleSave}
+            isSaving={isSaving}
+          />
         </div>
       </div>
     </>
