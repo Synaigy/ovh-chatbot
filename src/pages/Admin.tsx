@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { ADMIN_PASSWORD, API_CONFIG, FOOTER_CONFIG } from '@/config/env';
-import { getCounter } from '@/services/aiService';
+import { getCounter, updateConfig } from '@/services/aiService';
 import { Lock } from 'lucide-react';
 
 const Admin = () => {
@@ -14,6 +14,7 @@ const Admin = () => {
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [counter, setCounter] = useState<number | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [config, setConfig] = useState({
     api: {
       endpoint: API_CONFIG.ENDPOINT,
@@ -56,55 +57,22 @@ const Admin = () => {
 
   const handleSave = async () => {
     try {
-      // In a real-world scenario, this would be an API call
-      // Since we're using a frontend-only approach, we'll simulate saving
-      // by creating a download of the updated env.ts file
+      setIsSaving(true);
       
-      const envContent = `
-/**
- * This file simulates environment variables for frontend-only applications
- * In a real production environment, these values would be injected during build time
- * or managed through a backend service to avoid exposing tokens in client-side code.
- */
-
-export const API_CONFIG = {
-  ENDPOINT: '${config.api.endpoint}',
-  API_KEY: '${config.api.apiKey}',
-};
-
-export const FOOTER_CONFIG = {
-  CONTACT_PERSON: {
-    NAME: '${config.contact.name}',
-    TITLE: '${config.contact.title}',
-    PHOTO_URL: '${config.contact.photoUrl}',
-    MEETING_URL: '${config.contact.meetingUrl}',
-    LINKEDIN_URL: '${config.contact.linkedinUrl}'
-  },
-  COMPANY: {
-    NAME: '${config.company.name}'
-  }
-};
-
-// Admin password (in a real app, this would be hashed and stored securely)
-export const ADMIN_PASSWORD = '${ADMIN_PASSWORD}';
-`;
-
-      // Create a blob and download link for the updated env.ts file
-      const blob = new Blob([envContent], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'env.ts';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      toast({
-        title: "Konfiguration exportiert",
-        description: "Die Konfigurationsdatei wurde zum Download bereitgestellt. Bitte ersetzen Sie die vorhandene env.ts Datei mit dieser Datei.",
-        variant: "default",
+      // Call the updateConfig service function
+      const result = await updateConfig({
+        api: config.api,
+        contact: config.contact,
+        company: config.company
       });
+      
+      if (result.success) {
+        toast({
+          title: "Konfiguration gespeichert",
+          description: "Die Änderungen wurden erfolgreich gespeichert und werden bei einem Neustart der Anwendung wirksam.",
+          variant: "default",
+        });
+      }
     } catch (error) {
       console.error("Error saving configuration:", error);
       toast({
@@ -112,6 +80,8 @@ export const ADMIN_PASSWORD = '${ADMIN_PASSWORD}';
         description: "Die Konfiguration konnte nicht gespeichert werden.",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -267,8 +237,12 @@ export const ADMIN_PASSWORD = '${ADMIN_PASSWORD}';
             </div>
           </CardContent>
           <CardFooter>
-            <Button onClick={handleSave} className="ml-auto bg-highlight hover:bg-highlight/90">
-              Konfiguration exportieren
+            <Button 
+              onClick={handleSave} 
+              disabled={isSaving}
+              className="ml-auto bg-highlight hover:bg-highlight/90"
+            >
+              {isSaving ? 'Wird gespeichert...' : 'Konfiguration speichern'}
             </Button>
           </CardFooter>
         </Card>

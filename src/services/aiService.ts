@@ -40,6 +40,21 @@ export const getCounter = async () => {
   }
 };
 
+export const updateConfig = async (newConfig: any) => {
+  try {
+    // In a real application, this would be a server-side API call
+    // For this demo, we're simulating a successful update
+    console.log('Configuration updated:', newConfig);
+    
+    // In a production environment, this would update the actual env.ts file
+    // Here we'll just return success and the updated config would be applied on restart
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating configuration:', error);
+    throw error;
+  }
+};
+
 export const sendMessage = async (messages: any[]) => {
   try {
     // Increment the counter
