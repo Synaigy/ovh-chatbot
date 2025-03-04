@@ -1,3 +1,4 @@
+
 import OpenAI from 'openai';
 
 // Backend API URL for the counter and configuration - using HTTPS and the proper domain
@@ -56,11 +57,11 @@ const initializeOpenAIClient = (config: any) => {
 
 export const incrementCounter = async () => {
   try {
-    // Call the backend API to increment the counter using GET instead of POST
+    // Call the backend API to increment the counter using POST method to match server implementation
     const response = await fetch(`${API_URL}/counter/increment`, {
-      method: 'GET',
+      method: 'POST',
       headers: {
-        'Content-Type': 'text/plain'
+        'Content-Type': 'application/json'
       }
     });
     
