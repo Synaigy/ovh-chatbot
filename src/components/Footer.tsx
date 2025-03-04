@@ -1,11 +1,30 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Linkedin } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { FOOTER_CONFIG } from '@/config/env';
+import { getFooterConfig } from '@/services/configService';
 
 const Footer = () => {
-  const { CONTACT_PERSON, COMPANY } = FOOTER_CONFIG;
+  const [config, setConfig] = useState({
+    CONTACT_PERSON: {
+      NAME: '',
+      TITLE: '',
+      PHOTO_URL: '',
+      MEETING_URL: '',
+      LINKEDIN_URL: ''
+    },
+    COMPANY: {
+      NAME: ''
+    }
+  });
+  
+  useEffect(() => {
+    // Load configuration from the database
+    const footerConfig = getFooterConfig();
+    setConfig(footerConfig);
+  }, []);
+  
+  const { CONTACT_PERSON, COMPANY } = config;
   
   return (
     <footer className="w-full bg-black/30 border-t border-white/10 mt-16 py-8">
