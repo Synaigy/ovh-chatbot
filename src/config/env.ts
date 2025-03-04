@@ -15,7 +15,7 @@ export const FOOTER_CONFIG = {
     NAME: 'Marc Achsnich',
     TITLE: 'Head of Cloud',
     PHOTO_URL: 'https://profile-images.xing.com/images/0bac708fee0a79e6e7186a5fb08af312-26/marc-achsnich.1024x1024.jpg',
-    MEETING_URL: 'https://meetings.hubspot.com/frank-hoerning/expertengesprach-kreativer-dialog?uuid=e99278b4-1943-4661-ab4e-9d07a49536cf',
+    MEETING_URL: 'https://meetings.hubspot.com/frank-hoerning/expertengesprach?uuid=e99278b4-1943-4661-ab4e-9d07a49536cf',
     LINKEDIN_URL: 'https://www.linkedin.com/in/achsnich/'
   },
   COMPANY: {
@@ -24,5 +24,5 @@ export const FOOTER_CONFIG = {
 };
 
 // Admin password (in a real app, this would be hashed and stored securely)
-export const ADMIN_PASSWORD = 'admin123';
+export const ADMIN_PASSWORD = 'synaigy!2024#';
 
