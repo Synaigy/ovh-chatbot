@@ -10,6 +10,21 @@ let apiConfig = {
   API_KEY: ''
 };
 
+// Default configuration to use when database is unavailable
+const DEFAULT_CONFIG = {
+  API_ENDPOINT: 'https://deepseek-r1-distill-llama-70b.endpoints.kepler.ai.cloud.ovh.net/api/openai_compat/v1',
+  API_KEY: 'placeholder-key-only-for-ui-rendering',
+  CONTACT_NAME: 'Support Team',
+  CONTACT_TITLE: 'Customer Support',
+  CONTACT_PHOTO: 'https://profile-images.xing.com/images/0bac708fee0a79e6e7186a5fb08af312-26/marc-achsnich.1024x1024.jpg',
+  CONTACT_MEETING: '#',
+  CONTACT_LINKEDIN: '#',
+  COMPANY_NAME: 'Synaigy GmbH'
+};
+
+// Flag to track if we've already shown a database connection error toast
+let dbErrorToastShown = false;
+
 // Initialize OpenAI client with placeholder values
 // Will be properly configured after the first getConfig() call
 let openaiClient = new OpenAI({
@@ -85,13 +100,21 @@ export const getCounter = async () => {
 
 export const getConfig = async () => {
   try {
-    const response = await fetch(`${API_URL}/config`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
+    const response = await fetch(`${API_URL}/config`, {
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
       throw new Error(`Failed to get config: ${response.status} ${response.statusText}`);
     }
     
     const config = await response.json();
+    dbErrorToastShown = false; // Reset error toast flag on successful fetch
     
     // Initialize OpenAI client with fetched config
     initializeOpenAIClient(config);
@@ -99,19 +122,27 @@ export const getConfig = async () => {
     return config;
   } catch (error) {
     console.error('Error getting configuration:', error);
-    throw error;
+    
+    // Return default config for UI rendering when database is unavailable
+    return DEFAULT_CONFIG;
   }
 };
 
 export const updateConfig = async (newConfig: any) => {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
     const response = await fetch(`${API_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(newConfig)
+      body: JSON.stringify(newConfig),
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
       throw new Error(`Failed to update config: ${response.status} ${response.statusText}`);
@@ -122,10 +153,10 @@ export const updateConfig = async (newConfig: any) => {
     // Re-initialize OpenAI client with the updated config
     initializeOpenAIClient(updatedConfig);
     
-    return updatedConfig;
+    return { success: true, data: updatedConfig };
   } catch (error) {
     console.error('Error updating configuration:', error);
-    throw error;
+    return { success: false, error };
   }
 };
 

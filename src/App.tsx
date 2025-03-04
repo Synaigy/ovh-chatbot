@@ -21,13 +21,28 @@ const ConfigHandler = () => {
   const [configLoaded, setConfigLoaded] = useState(false);
   
   useEffect(() => {
-    // Load configuration on first render
-    if (!configLoaded) {
-      loadConfiguration().then(() => {
-        setConfigLoaded(true);
-        console.log('Initial configuration loaded via ConfigHandler');
-      });
-    }
+    // Load configuration on first render with retry mechanism
+    const loadConfig = async () => {
+      if (!configLoaded) {
+        try {
+          const config = await loadConfiguration();
+          if (config) {
+            setConfigLoaded(true);
+            console.log('Initial configuration loaded via ConfigHandler');
+          } else {
+            console.log('Failed to load initial configuration, will use defaults');
+            // Still mark as loaded to prevent loops, we'll use defaults
+            setConfigLoaded(true);
+          }
+        } catch (error) {
+          console.error('Error in ConfigHandler loadConfiguration:', error);
+          // Still mark as loaded to prevent loops, we'll use defaults
+          setConfigLoaded(true);
+        }
+      }
+    };
+    
+    loadConfig();
     
     // Initialize config detection with proper timing - once per route change
     const cleanup = initializeConfigDetection();
