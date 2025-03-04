@@ -54,11 +54,6 @@ const ChatInterface = () => {
     };
     
     scrollToBottom();
-    
-    const chatContainer = messagesEndRef.current?.parentElement;
-    if (chatContainer) {
-      chatContainer.style.overflowY = 'auto';
-    }
   }, [messages]);
   
   useEffect(() => {
@@ -114,10 +109,7 @@ const ChatInterface = () => {
     
     setIsLoading(true);
     
-    const chatContainer = messagesEndRef.current?.parentElement;
-    if (chatContainer) {
-      chatContainer.style.overflowY = 'auto';
-    }
+    // Remove the scroll locking that was happening here
     
     try {
       const apiMessages = [...messages, userMessage].map(msg => ({
@@ -145,6 +137,7 @@ const ChatInterface = () => {
             return updatedMessages;
           });
           
+          // Allow scrolling by not forcing overflowY in the parent element
           if (messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
           }
@@ -178,10 +171,7 @@ const ChatInterface = () => {
     } finally {
       setIsLoading(false);
       
-      const chatContainer = messagesEndRef.current?.parentElement;
-      if (chatContainer) {
-        chatContainer.style.overflowY = 'auto';
-      }
+      // Remove the scroll locking that was happening here as well
     }
   };
   
@@ -202,7 +192,7 @@ const ChatInterface = () => {
   
   return (
     <div className="rounded-xl overflow-hidden glass-morphism border-white/10 flex flex-col h-[600px] md:h-[700px]">
-      <div className="flex-1 overflow-y-auto p-4 scrollbar-thin" style={{ overflowY: 'auto' }}>
+      <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
         {isEmpty && !hasError && !limitReached && (
           <div className="h-full flex flex-col items-center justify-center text-center p-6">
             <Bot className="h-12 w-12 text-white/20 mb-4" />
