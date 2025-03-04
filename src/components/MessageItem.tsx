@@ -24,7 +24,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isLast = false }) =>
   }, []);
 
   const isUser = message.role === 'user';
-  const isLoading = message.role === 'assistant' && message.content === '...';
+  const isLoading = message.role === 'assistant' && message.content === '';
   
   // Handling code blocks in the message
   const processMessageContent = (content: string) => {

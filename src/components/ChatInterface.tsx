@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, User, Send, ArrowDown, Database } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -137,7 +138,21 @@ const ChatInterface = () => {
   
   // Check for any messages and configuration status
   const isEmpty = messages.length === 0;
-  const hasError = configError === true; // Fixed this line
+  const hasError = configError === true;
+  
+  // Example questions to show when the chat is empty
+  const exampleQuestions = [
+    "Was ist ein Reasoning-LLM?",
+    "Wie ist deepseek-r1-distill-llama-70b aufgebaut?",
+    "Welche Vorteile bieten die OVHcloud AI Endpoints?",
+    "Was sind Anwendungsfälle für KI in Unternehmen?"
+  ];
+  
+  const handleExampleClick = (question: string) => {
+    setInput(question);
+    // Auto-focus the textarea
+    textareaRef.current?.focus();
+  };
   
   return (
     <div className="rounded-xl overflow-hidden glass-morphism border-white/10 flex flex-col h-[600px] md:h-[700px]">
@@ -147,10 +162,24 @@ const ChatInterface = () => {
           <div className="h-full flex flex-col items-center justify-center text-center p-6">
             <Bot className="h-12 w-12 text-white/20 mb-4" />
             <h3 className="text-xl font-semibold mb-2">Wie kann ich helfen?</h3>
-            <p className="text-white/70 mb-4">
+            <p className="text-white/70 mb-6">
               Ich bin hier, um Ihre Fragen zu beantworten. <br />
               Stellen Sie mir eine Frage, um zu beginnen!
             </p>
+            
+            {/* Example questions */}
+            <div className="w-full max-w-md space-y-2">
+              <p className="text-sm text-white/50 mb-2">Beispielfragen:</p>
+              {exampleQuestions.map((question, index) => (
+                <button
+                  key={index}
+                  className="w-full p-2 text-left text-sm rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                  onClick={() => handleExampleClick(question)}
+                >
+                  {question}
+                </button>
+              ))}
+            </div>
           </div>
         )}
         
@@ -171,9 +200,8 @@ const ChatInterface = () => {
             {messages.map((message, index) => (
               <MessageItem 
                 key={index}
-                role={message.role} 
-                content={message.content}
-                isLoading={index === messages.length - 1 && isLoading}
+                message={message}
+                isLast={index === messages.length - 1 && isLoading}
               />
             ))}
             <div ref={messagesEndRef} />
