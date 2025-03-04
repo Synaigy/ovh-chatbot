@@ -32,8 +32,18 @@ let openaiClient = new OpenAI({
 // Function to initialize the OpenAI client with configuration from database
 const initializeOpenAIClient = (config: any) => {
   if (config.API_ENDPOINT && config.API_KEY) {
+    // Fix: Remove the /v2 from the endpoint if it exists
+    let endpoint = config.API_ENDPOINT;
+    if (endpoint.endsWith('/v2')) {
+      endpoint = endpoint.replace('/v2', '');
+    }
+    // or make sure it uses /v1 instead of /v2
+    if (endpoint.includes('/v2')) {
+      endpoint = endpoint.replace('/v2', '/v1');
+    }
+    
     apiConfig = {
-      ENDPOINT: config.API_ENDPOINT,
+      ENDPOINT: endpoint,
       API_KEY: config.API_KEY
     };
     
@@ -257,6 +267,8 @@ export const sendMessage = async (messages: any[]) => {
     
     // Increment the counter
     await incrementCounter();
+    
+    console.log('Sending message to endpoint:', apiConfig.ENDPOINT);
     
     const response = await openaiClient.chat.completions.create({
       model: 'DeepSeek-R1-Distill-Llama-70B',
