@@ -9,12 +9,20 @@ interface CounterDisplayProps {
 
 const CounterDisplay: React.FC<CounterDisplayProps> = ({ isAuthenticated }) => {
   const [counter, setCounter] = useState<number | null>(null);
+  const [apiUrl, setApiUrl] = useState<string>('');
 
   useEffect(() => {
     const loadCounter = async () => {
       if (isAuthenticated) {
-        const count = await getCounter();
-        setCounter(count);
+        try {
+          // Get the counter value and the API URL used
+          const { count, url } = await getCounter();
+          setCounter(count);
+          setApiUrl(url);
+          console.log(`Counter fetched from ${url}: ${count}`);
+        } catch (error) {
+          console.error('Error loading counter:', error);
+        }
       }
     };
     
@@ -34,7 +42,7 @@ const CounterDisplay: React.FC<CounterDisplayProps> = ({ isAuthenticated }) => {
     };
   }, [isAuthenticated]);
 
-  return <StatisticsCard counter={counter} />;
+  return <StatisticsCard counter={counter} apiUrl={apiUrl} />;
 };
 
 export default CounterDisplay;

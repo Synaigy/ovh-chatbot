@@ -5,9 +5,10 @@ import { Progress } from '@/components/ui/progress';
 
 interface StatisticsCardProps {
   counter: number | null;
+  apiUrl?: string;
 }
 
-const StatisticsCard = ({ counter }: StatisticsCardProps) => {
+const StatisticsCard = ({ counter, apiUrl }: StatisticsCardProps) => {
   // Calculate progress percentage, max at 50 messages
   const progressValue = counter !== null ? Math.min((counter / 50) * 100, 100) : 0;
   
@@ -27,6 +28,11 @@ const StatisticsCard = ({ counter }: StatisticsCardProps) => {
             </div>
             <Progress value={progressValue} className="h-2" />
           </div>
+          {apiUrl && (
+            <div className="mt-4 text-xs text-white/50 border-t border-white/10 pt-2">
+              <div>API Quelle: {apiUrl}</div>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -83,11 +83,19 @@ export const getCounter = async () => {
     const countText = await response.text();
     const count = parseInt(countText.trim() || '0', 10);
     
+    console.log(`API Counter Response from ${API_URL}/counter:`, countText);
+    
     // If NaN, return 0 instead
-    return isNaN(count) ? 0 : count;
+    return {
+      count: isNaN(count) ? 0 : count,
+      url: `${API_URL}/counter`
+    };
   } catch (error) {
     console.error('Error getting counter:', error);
-    return 0;
+    return {
+      count: 0,
+      url: `${API_URL}/counter (error occurred)`
+    };
   }
 };
 
@@ -95,8 +103,8 @@ export const checkMessageLimit = async (): Promise<{limitReached: boolean; count
   try {
     const count = await getCounter();
     return { 
-      limitReached: count >= DAILY_MESSAGE_LIMIT,
-      count
+      limitReached: count.count >= DAILY_MESSAGE_LIMIT,
+      count: count.count
     };
   } catch (error) {
     console.error('Error checking message limit:', error);
