@@ -23,9 +23,10 @@ const CompanyConfigForm = ({ name, onChange, onSave, isSaving }: CompanyConfigPr
           <div className="space-y-2">
             <label className="text-sm font-medium">Firmenname</label>
             <Input 
-              value={name} 
+              value={name || ''} 
               onChange={(e) => onChange(e.target.value)}
               className="glass-morphism"
+              placeholder="Firmenname eingeben"
             />
           </div>
         </div>

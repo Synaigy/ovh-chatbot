@@ -21,18 +21,20 @@ const ApiConfigForm = ({ endpoint, apiKey, onChange }: ApiConfigProps) => {
           <div className="space-y-2">
             <label className="text-sm font-medium">API Endpoint</label>
             <Input 
-              value={endpoint} 
+              value={endpoint || ''} 
               onChange={(e) => onChange('endpoint', e.target.value)}
               className="glass-morphism"
+              placeholder="API Endpoint eingeben"
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">API Key</label>
             <Input 
               type="password" 
-              value={apiKey} 
+              value={apiKey || ''} 
               onChange={(e) => onChange('apiKey', e.target.value)}
               className="glass-morphism"
+              placeholder="API Key eingeben"
             />
           </div>
         </div>

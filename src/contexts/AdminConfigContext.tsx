@@ -31,6 +31,9 @@ interface AdminConfigContextType {
   handleContactChange: (field: string, value: string) => void;
   handleCompanyNameChange: (value: string) => void;
   handleSave: () => Promise<void>;
+  setConfig: React.Dispatch<React.SetStateAction<ConfigState>>;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  setHasError: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 // Empty initial config (no default values)
@@ -111,14 +114,38 @@ export const AdminConfigProvider = ({ children }: { children: ReactNode }) => {
     try {
       setIsSaving(true);
       
-      const success = await saveConfiguration(config);
+      // Create a properly formatted configuration object for the API
+      const configToSave = {
+        api: {
+          endpoint: config.api.endpoint,
+          apiKey: config.api.apiKey
+        },
+        contact: {
+          name: config.footer.CONTACT_PERSON.NAME,
+          title: config.footer.CONTACT_PERSON.TITLE,
+          photoUrl: config.footer.CONTACT_PERSON.PHOTO_URL,
+          meetingUrl: config.footer.CONTACT_PERSON.MEETING_URL,
+          linkedinUrl: config.footer.CONTACT_PERSON.LINKEDIN_URL
+        },
+        company: {
+          name: config.footer.COMPANY.NAME
+        }
+      };
       
-      if (success) {
+      const result = await saveConfiguration(configToSave);
+      
+      if (result) {
         toast({
           title: "Konfiguration gespeichert",
           description: "Die Änderungen wurden erfolgreich gespeichert und werden bei einem Neustart der Anwendung wirksam.",
           variant: "default",
         });
+        
+        // Force a config refresh after saving
+        const updatedConfig = await loadConfiguration();
+        if (updatedConfig) {
+          setConfig(updatedConfig);
+        }
       } else {
         throw new Error("Failed to save configuration");
       }

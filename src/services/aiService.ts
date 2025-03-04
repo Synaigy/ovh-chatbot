@@ -179,6 +179,8 @@ export const getConfig = async () => {
 
 export const updateConfig = async (newConfig: any) => {
   try {
+    console.log('Updating configuration with:', newConfig);
+    
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
     
@@ -194,13 +196,28 @@ export const updateConfig = async (newConfig: any) => {
     clearTimeout(timeoutId);
     
     if (!response.ok) {
+      console.error(`Failed to update config: ${response.status} ${response.statusText}`);
       throw new Error(`Failed to update config: ${response.status} ${response.statusText}`);
     }
     
     const updatedConfig = await response.json();
+    console.log('Configuration updated successfully:', updatedConfig);
     
     // Re-initialize OpenAI client with the updated config
-    initializeOpenAIClient(updatedConfig);
+    if (updatedConfig.API_ENDPOINT && updatedConfig.API_KEY) {
+      apiConfig = {
+        ENDPOINT: updatedConfig.API_ENDPOINT,
+        API_KEY: updatedConfig.API_KEY
+      };
+      
+      openaiClient = new OpenAI({
+        apiKey: apiConfig.API_KEY,
+        baseURL: apiConfig.ENDPOINT,
+        dangerouslyAllowBrowser: true // Only for demo purposes
+      });
+      
+      console.log('OpenAI client re-initialized with updated configuration');
+    }
     
     return { success: true, data: updatedConfig };
   } catch (error) {
@@ -208,7 +225,7 @@ export const updateConfig = async (newConfig: any) => {
     
     toast({
       title: "Konfigurationsfehler",
-      description: "Die Konfiguration konnte nicht aktualisiert werden. Bitte wenden Sie sich an den Administrator.",
+      description: "Die Konfiguration konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut oder wenden Sie sich an den Administrator.",
       variant: "destructive",
     });
     

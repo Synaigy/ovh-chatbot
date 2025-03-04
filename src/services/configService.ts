@@ -62,6 +62,8 @@ export const loadConfiguration = async () => {
       return null;
     }
     
+    console.log('Loading configuration from database:', config);
+    
     // Update stored API configuration
     currentApiConfig = {
       ENDPOINT: config.API_ENDPOINT || '',
@@ -113,33 +115,52 @@ export const loadConfiguration = async () => {
 // Function to save configuration to the database
 export const saveConfiguration = async (newConfig) => {
   try {
-    const result = await updateConfig({
-      api: {
-        endpoint: newConfig.api.endpoint,
-        apiKey: newConfig.api.apiKey
-      },
-      contact: {
-        name: newConfig.footer.CONTACT_PERSON.NAME,
-        title: newConfig.footer.CONTACT_PERSON.TITLE,
-        photoUrl: newConfig.footer.CONTACT_PERSON.PHOTO_URL,
-        meetingUrl: newConfig.footer.CONTACT_PERSON.MEETING_URL,
-        linkedinUrl: newConfig.footer.CONTACT_PERSON.LINKEDIN_URL
-      },
-      company: {
-        name: newConfig.footer.COMPANY.NAME
-      }
-    });
+    console.log('Saving configuration to database:', newConfig);
+    
+    const updateData = {
+      API_ENDPOINT: newConfig.api.endpoint,
+      API_KEY: newConfig.api.apiKey,
+      CONTACT_NAME: newConfig.contact.name,
+      CONTACT_TITLE: newConfig.contact.title,
+      CONTACT_PHOTO: newConfig.contact.photoUrl,
+      CONTACT_MEETING: newConfig.contact.meetingUrl,
+      CONTACT_LINKEDIN: newConfig.contact.linkedinUrl,
+      COMPANY_NAME: newConfig.company.name
+    };
+    
+    console.log('Formatted update data:', updateData);
+    
+    const result = await updateConfig(updateData);
     
     if (result.success) {
+      console.log('Configuration saved successfully:', result.data);
+      
       // Update local configuration
-      currentApiConfig = newConfig.api;
-      currentFooterConfig = newConfig.footer;
+      currentApiConfig = {
+        ENDPOINT: newConfig.api.endpoint,
+        API_KEY: newConfig.api.apiKey
+      };
+      
+      currentFooterConfig = {
+        CONTACT_PERSON: {
+          NAME: newConfig.contact.name,
+          TITLE: newConfig.contact.title,
+          PHOTO_URL: newConfig.contact.photoUrl,
+          MEETING_URL: newConfig.contact.meetingUrl,
+          LINKEDIN_URL: newConfig.contact.linkedinUrl
+        },
+        COMPANY: {
+          NAME: newConfig.company.name
+        }
+      };
       
       // Reset the fetch time to prevent immediate reload
       lastFetchTime = Date.now();
       
       return true;
     }
+    
+    console.error('Failed to save configuration:', result);
     return false;
   } catch (error) {
     console.error('Error saving configuration:', error);
