@@ -1,11 +1,17 @@
 
-const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
-const cors = require('cors');
+import express from 'express';
+import sqlite3 from 'sqlite3';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import cors from 'cors';
 
 const app = express();
 const PORT = 3001;
+
+// ES modules don't have __dirname, so we need to create it
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const DB_PATH = path.join(__dirname, 'chatbot.db');
 
 // Enable CORS
