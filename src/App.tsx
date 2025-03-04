@@ -14,7 +14,7 @@ import { initializeConfigDetection } from "./services/configService";
 
 const queryClient = new QueryClient();
 
-// Component to handle config change detection
+// Component to handle config change detection only once per route change
 const ConfigChangeDetector = () => {
   const location = useLocation();
   
@@ -23,6 +23,7 @@ const ConfigChangeDetector = () => {
     const cleanup = initializeConfigDetection();
     
     return cleanup;
+    // We only want to run this once per route change
   }, [location.pathname]);
   
   return null;
