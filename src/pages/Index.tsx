@@ -1,10 +1,9 @@
-
 import React, { useEffect, useState } from 'react';
 import ChatInterface from '@/components/ChatInterface';
 import Banner from '@/components/Banner';
 import CodeBlock from '@/components/CodeBlock';
 import TutorialBanner from '@/components/TutorialBanner';
-import { Github } from 'lucide-react'; // Changed from GitHubLogoIcon to Github from lucide-react
+import { Github } from 'lucide-react'; 
 import { getConfig } from '@/services/aiService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -81,6 +80,67 @@ chatWithAI('Erkläre die Vorteile von KI in einfachen Worten.')
   .catch(error => console.error(error));`;
 
   const reactComponentCode = `import React, { useState } from 'react';
+import OpenAI from 'openai';
+
+const ChatbotForm = () => {
+  const [prompt, setPrompt] = useState('');
+  const [response, setResponse] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState([]);
+
+  // OpenAI-Client initialisieren
+  const openaiClient = new OpenAI({
+    apiKey: 'your-api-key',
+    baseURL: 'https://deepseek-r1-distill-llama-70b.endpoints.kepler.ai.cloud.ovh.net/api/openai_compat/v1',
+    dangerouslyAllowBrowser: true // Nur für Demo-Zwecke!
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!prompt.trim() || isLoading) return;
+    
+    setIsLoading(true);
+    setResponse('');
+    
+    // Neue Nachricht zum Verlauf hinzufügen
+    const newMessages = [
+      ...messages,
+      { role: 'user', content: prompt }
+    ];
+    setMessages(newMessages);
+    
+    try {
+      // API-Anfrage an das LLM senden
+      const completion = await openaiClient.chat.completions.create({
+        model: 'DeepSeek-R1-Distill-Llama-70B',
+        messages: newMessages,
+        stream: true,
+      });
+      
+      let fullResponse = '';
+      
+      // Stream-Verarbeitung für Live-Antwort
+      for await (const chunk of completion) {
+        if (chunk.choices[0]?.delta?.content) {
+          fullResponse += chunk.choices[0].delta.content;
+          setResponse(fullResponse);
+        }
+      }
+      
+      // Antwort zum Nachrichtenverlauf hinzufügen
+      setMessages([
+        ...newMessages,
+        { role: 'assistant', content: fullResponse }
+      ]);
+      
+      setPrompt('');
+    } catch (error) {
+      console.error('Fehler bei der API-Anfrage:', error);
+      setResponse('Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="p-4">
@@ -107,11 +167,33 @@ chatWithAI('Erkläre die Vorteile von KI in einfachen Worten.')
           <p>{response}</p>
         </div>
       )}
+      
+      {/* Nachrichtenverlauf anzeigen */}
+      <div className="mt-6">
+        <h3 className="font-bold mb-2">Chatverlauf:</h3>
+        <div className="space-y-3">
+          {messages.map((msg, index) => (
+            <div 
+              key={index} 
+              className={\`p-3 rounded \${
+                msg.role === 'user' 
+                  ? 'bg-blue-100 ml-6' 
+                  : 'bg-gray-100 mr-6'
+              }\`}
+            >
+              <div className="font-semibold mb-1">
+                {msg.role === 'user' ? 'Sie:' : 'AI:'}
+              </div>
+              <div>{msg.content}</div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
 
-export default AIChat;`;
+export default ChatbotForm;`;
 
   return (
     <div className="min-h-screen w-full flex flex-col">
@@ -272,4 +354,3 @@ export default AIChat;`;
 };
 
 export default Index;
-
