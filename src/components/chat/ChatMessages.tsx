@@ -94,7 +94,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   
   if (isEmpty && !hasError && !limitReached) {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-center p-6">
+      <div className="h-full flex flex-col items-center justify-center text-center p-6 overflow-y-auto">
         <Bot className="h-12 w-12 text-white/20 mb-4" />
         <h3 className="text-xl font-semibold mb-2">Wie kann ich helfen?</h3>
         <p className="text-white/70 mb-6">
