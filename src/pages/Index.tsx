@@ -43,7 +43,7 @@ const Index = () => {
   const setupCode = `import OpenAI from 'openai';
 
 // API-Endpoint des OVHcloud AI Endpoints
-const API_ENDPOINT = 'https://deepseek-r1-distill-llama-70b.endpoints.kepler.ai.cloud.ovh.net/api/openai_compat/v';
+const API_ENDPOINT = 'https://deepseek-r1-distill-llama-70b.endpoints.kepler.ai.cloud.ovh.net/api/openai_compat/v1';
 
 // API-Schlüssel (in einer echten Anwendung aus Umgebungsvariablen)
 const API_KEY = 'Ihr-API-Schlüssel';
