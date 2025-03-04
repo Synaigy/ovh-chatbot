@@ -2,6 +2,7 @@
 import React from 'react';
 import CodeBlock from '@/components/CodeBlock';
 import Banner from '@/components/Banner';
+import { GitHubLogoIcon } from '@radix-ui/react-icons';
 
 const Tutorial = () => {
   const installCode = `npm install openai`;
@@ -126,6 +127,29 @@ export default AIChat;`;
               über die OVHcloud AI Endpoints API anbinden und nutzen können. Mit den bereitgestellten Code-Beispielen 
               können Sie schnell und einfach eigene KI-gestützte Anwendungen entwickeln.
             </p>
+            
+            <div className="bg-black/20 rounded-lg p-4 border border-white/10">
+              <div className="flex items-center mb-2">
+                <GitHubLogoIcon className="w-5 h-5 mr-2" />
+                <h3 className="text-lg font-medium">Open Source Initiative</h3>
+              </div>
+              <p className="text-white/80 text-sm">
+                Im Sinne der OVHcloud Open-Source-Philosophie ist dieses Tutorial und der gesamte Quellcode öffentlich verfügbar. 
+                Synaigy legt den vollständigen Code offen, um Transparenz zu fördern und der Community die Möglichkeit zu geben, 
+                daran mitzuwirken und ihn weiterzuentwickeln.
+              </p>
+              <div className="mt-3">
+                <a 
+                  href="https://github.com/synaigy/ovh-ai-endpoints-tutorial" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-3 py-1 text-sm bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+                >
+                  <GitHubLogoIcon className="w-4 h-4 mr-1" />
+                  GitHub Repository ansehen
+                </a>
+              </div>
+            </div>
           </div>
           
           <div className="glass-morphism rounded-xl p-6 md:p-8 mb-12">
