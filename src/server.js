@@ -1,67 +1,88 @@
 
 const express = require('express');
-const fs = require('fs');
+const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const cors = require('cors');
 
 const app = express();
-const PORT = 3001; // Using 3001 to avoid conflicts with the frontend dev server
-const COUNTER_FILE = path.join(__dirname, 'config/counter.txt');
+const PORT = 3001;
+const DB_PATH = path.join(__dirname, 'counter.db');
 
-// Enable CORS for all routes to allow frontend to access the API
+// Enable CORS
 app.use(cors());
-
-// Parse text and JSON request bodies
 app.use(express.text());
 app.use(express.json());
 
-// Ensure the counter file exists
-const ensureCounterFile = () => {
-  if (!fs.existsSync(COUNTER_FILE)) {
-    try {
-      fs.writeFileSync(COUNTER_FILE, '0');
-      console.log('Counter file created successfully');
-    } catch (err) {
-      console.error('Error creating counter file:', err);
-    }
+// Initialize SQLite database
+const db = new sqlite3.Database(DB_PATH, (err) => {
+  if (err) {
+    console.error('Error opening database:', err);
+  } else {
+    console.log('Connected to SQLite database');
+    // Create counter table if it doesn't exist
+    db.run(`
+      CREATE TABLE IF NOT EXISTS counter (
+        id INTEGER PRIMARY KEY,
+        value INTEGER DEFAULT 0
+      )
+    `, (err) => {
+      if (err) {
+        console.error('Error creating table:', err);
+      } else {
+        // Initialize counter if not exists
+        db.get('SELECT * FROM counter WHERE id = 1', (err, row) => {
+          if (!row) {
+            db.run('INSERT INTO counter (id, value) VALUES (1, 0)');
+          }
+        });
+      }
+    });
   }
-};
-
-ensureCounterFile();
+});
 
 // Route to get the counter value
 app.get('/api/counter', (req, res) => {
-  fs.readFile(COUNTER_FILE, 'utf8', (err, data) => {
+  db.get('SELECT value FROM counter WHERE id = 1', (err, row) => {
     if (err) {
-      console.error('Error reading counter file:', err);
+      console.error('Error reading counter:', err);
       return res.status(500).send('Error reading counter');
     }
-    const count = data.trim() || '0';
-    res.send(count);
+    res.send(String(row ? row.value : 0));
   });
 });
 
 // Route to increment the counter
 app.post('/api/counter/increment', (req, res) => {
-  fs.readFile(COUNTER_FILE, 'utf8', (err, data) => {
+  db.run('UPDATE counter SET value = value + 1 WHERE id = 1', (err) => {
     if (err) {
-      console.error('Error reading counter file:', err);
-      return res.status(500).send('Error reading counter');
+      console.error('Error incrementing counter:', err);
+      return res.status(500).send('Error incrementing counter');
     }
     
-    const count = parseInt(data.trim() || '0', 10);
-    const newCount = isNaN(count) ? 1 : count + 1;
-    
-    fs.writeFile(COUNTER_FILE, newCount.toString(), (err) => {
+    // Get the new value
+    db.get('SELECT value FROM counter WHERE id = 1', (err, row) => {
       if (err) {
-        console.error('Error writing to counter file:', err);
-        return res.status(500).send('Error writing counter');
+        console.error('Error reading counter after increment:', err);
+        return res.status(500).send('Error reading counter');
       }
-      res.send(newCount.toString());
+      res.send(String(row.value));
     });
+  });
+});
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+  db.close((err) => {
+    if (err) {
+      console.error('Error closing database:', err);
+    } else {
+      console.log('Database connection closed');
+    }
+    process.exit(0);
   });
 });
 
 app.listen(PORT, () => {
   console.log(`Counter API server running on http://localhost:${PORT}`);
 });
+
