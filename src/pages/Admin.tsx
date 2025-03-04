@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import { ADMIN_PASSWORD, API_CONFIG, FOOTER_CONFIG } from '@/config/env';
-import { getCounter, updateConfig } from '@/services/aiService';
+import { loadConfiguration, saveConfiguration } from '@/services/configService';
+import { getCounter } from '@/services/aiService';
 import Banner from '@/components/Banner';
 import LoginForm from '@/components/admin/LoginForm';
 import StatisticsCard from '@/components/admin/StatisticsCard';
@@ -10,29 +10,67 @@ import ApiConfigForm from '@/components/admin/ApiConfigForm';
 import ContactConfigForm from '@/components/admin/ContactConfigForm';
 import CompanyConfigForm from '@/components/admin/CompanyConfigForm';
 
+// Admin password (temporary solution until we move this to the database as well)
+const ADMIN_PASSWORD = 'synaigy!2024#';
+
 const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState('');
   const [counter, setCounter] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [config, setConfig] = useState({
     api: {
-      endpoint: API_CONFIG.ENDPOINT,
-      apiKey: API_CONFIG.API_KEY,
+      endpoint: '',
+      apiKey: '',
     },
-    contact: {
-      name: FOOTER_CONFIG.CONTACT_PERSON.NAME,
-      title: FOOTER_CONFIG.CONTACT_PERSON.TITLE,
-      photoUrl: FOOTER_CONFIG.CONTACT_PERSON.PHOTO_URL,
-      meetingUrl: FOOTER_CONFIG.CONTACT_PERSON.MEETING_URL,
-      linkedinUrl: FOOTER_CONFIG.CONTACT_PERSON.LINKEDIN_URL,
-    },
-    company: {
-      name: FOOTER_CONFIG.COMPANY.NAME,
-    },
+    footer: {
+      CONTACT_PERSON: {
+        NAME: '',
+        TITLE: '',
+        PHOTO_URL: '',
+        MEETING_URL: '',
+        LINKEDIN_URL: '',
+      },
+      COMPANY: {
+        NAME: '',
+      },
+    }
   });
   
   const { toast } = useToast();
+
+  // Load configuration from the database
+  useEffect(() => {
+    const loadConfig = async () => {
+      if (isAuthenticated) {
+        setIsLoading(true);
+        try {
+          const dbConfig = await loadConfiguration();
+          if (dbConfig) {
+            setConfig({
+              api: {
+                endpoint: dbConfig.api.ENDPOINT,
+                apiKey: dbConfig.api.API_KEY,
+              },
+              footer: dbConfig.footer
+            });
+          }
+        } catch (error) {
+          console.error("Error loading configuration:", error);
+          toast({
+            title: "Fehler",
+            description: "Die Konfiguration konnte nicht geladen werden.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    loadConfig();
+  }, [isAuthenticated, toast]);
 
   useEffect(() => {
     const loadCounter = async () => {
@@ -80,9 +118,12 @@ const Admin = () => {
   const handleContactChange = (field: string, value: string) => {
     setConfig({
       ...config,
-      contact: {
-        ...config.contact,
-        [field]: value
+      footer: {
+        ...config.footer,
+        CONTACT_PERSON: {
+          ...config.footer.CONTACT_PERSON,
+          [field]: value
+        }
       }
     });
   };
@@ -90,9 +131,12 @@ const Admin = () => {
   const handleCompanyNameChange = (value: string) => {
     setConfig({
       ...config,
-      company: {
-        ...config.company,
-        name: value
+      footer: {
+        ...config.footer,
+        COMPANY: {
+          ...config.footer.COMPANY,
+          NAME: value
+        }
       }
     });
   };
@@ -101,18 +145,16 @@ const Admin = () => {
     try {
       setIsSaving(true);
       
-      const result = await updateConfig({
-        api: config.api,
-        contact: config.contact,
-        company: config.company
-      });
+      const success = await saveConfiguration(config);
       
-      if (result.success) {
+      if (success) {
         toast({
           title: "Konfiguration gespeichert",
           description: "Die Änderungen wurden erfolgreich gespeichert und werden bei einem Neustart der Anwendung wirksam.",
           variant: "default",
         });
+      } else {
+        throw new Error("Failed to save configuration");
       }
     } catch (error) {
       console.error("Error saving configuration:", error);
@@ -135,6 +177,17 @@ const Admin = () => {
     );
   }
 
+  if (isLoading) {
+    return (
+      <>
+        <Banner subline="Admin Bereich" />
+        <div className="container mx-auto py-10 mt-20 text-center">
+          <div className="text-2xl">Lade Konfiguration...</div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Banner subline="Admin Bereich" />
@@ -151,12 +204,18 @@ const Admin = () => {
           />
           
           <ContactConfigForm 
-            contact={config.contact}
+            contact={{
+              name: config.footer.CONTACT_PERSON.NAME,
+              title: config.footer.CONTACT_PERSON.TITLE,
+              photoUrl: config.footer.CONTACT_PERSON.PHOTO_URL,
+              meetingUrl: config.footer.CONTACT_PERSON.MEETING_URL,
+              linkedinUrl: config.footer.CONTACT_PERSON.LINKEDIN_URL
+            }}
             onChange={handleContactChange}
           />
           
           <CompanyConfigForm 
-            name={config.company.name}
+            name={config.footer.COMPANY.NAME}
             onChange={handleCompanyNameChange}
             onSave={handleSave}
             isSaving={isSaving}

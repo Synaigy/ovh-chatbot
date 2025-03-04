@@ -1,6 +1,6 @@
 
 import { toast } from '@/components/ui/use-toast';
-import { getConfig } from './aiService';
+import { getConfig, updateConfig } from './aiService';
 
 // Store initial configuration
 let currentApiConfig = {
@@ -58,6 +58,40 @@ export const loadConfiguration = async () => {
       variant: "destructive",
     });
     return null;
+  }
+};
+
+// Function to save configuration to the database
+export const saveConfiguration = async (newConfig) => {
+  try {
+    const result = await updateConfig({
+      api: {
+        endpoint: newConfig.api.endpoint,
+        apiKey: newConfig.api.apiKey
+      },
+      contact: {
+        name: newConfig.footer.CONTACT_PERSON.NAME,
+        title: newConfig.footer.CONTACT_PERSON.TITLE,
+        photoUrl: newConfig.footer.CONTACT_PERSON.PHOTO_URL,
+        meetingUrl: newConfig.footer.CONTACT_PERSON.MEETING_URL,
+        linkedinUrl: newConfig.footer.CONTACT_PERSON.LINKEDIN_URL
+      },
+      company: {
+        name: newConfig.footer.COMPANY.NAME
+      }
+    });
+    
+    if (result.success) {
+      // Update local configuration
+      currentApiConfig = newConfig.api;
+      currentFooterConfig = newConfig.footer;
+      
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Error saving configuration:', error);
+    return false;
   }
 };
 
